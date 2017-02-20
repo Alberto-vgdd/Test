@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class PlayerMovement : MonoBehaviour
+public class PlayerMovementScript : MonoBehaviour
 {
 
     public Transform m_Camera;
@@ -32,11 +32,11 @@ public class PlayerMovement : MonoBehaviour
         m_HorizontalInput = Input.GetAxis("Horizontal");
         m_VerticalInput = Input.GetAxis("Vertical");
 
-        m_HorizontalDirection = m_Camera.TransformVector(Vector3.right);
-        m_VerticalDirection = m_Camera.TransformVector(Vector3.forward);
+        m_HorizontalDirection = Vector3.Scale(m_Camera.TransformVector(Vector3.right), new Vector3(1f, 0f, 1f)).normalized;
+        m_VerticalDirection = Vector3.Scale(m_Camera.TransformVector(Vector3.forward), new Vector3(1f, 0f, 1f)).normalized;
 
-        m_HorizontalLine.SetPosition(1, m_Camera.right * m_HorizontalInput * m_LineLength);
-        m_VerticalLine.SetPosition(1, m_Camera.forward * m_VerticalInput * m_LineLength);
+        m_HorizontalLine.SetPosition(1, m_HorizontalDirection * m_HorizontalInput * m_LineLength);
+        m_VerticalLine.SetPosition(1, m_VerticalDirection * m_VerticalInput * m_LineLength);
 
     }
 }
