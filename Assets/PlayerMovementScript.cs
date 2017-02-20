@@ -35,6 +35,7 @@ public class PlayerMovementScript : MonoBehaviour
         m_HorizontalDirection = Vector3.Scale(m_Camera.TransformVector(Vector3.right), new Vector3(1f, 0f, 1f)).normalized;
         m_VerticalDirection = Vector3.Scale(m_Camera.TransformVector(Vector3.forward), new Vector3(1f, 0f, 1f)).normalized;
 
+        m_Target.Translate((m_HorizontalDirection* m_HorizontalInput + m_VerticalDirection* m_VerticalInput  ).normalized* 10f* Time.deltaTime);
         m_HorizontalLine.SetPosition(1, m_HorizontalDirection * m_HorizontalInput * m_LineLength);
         m_VerticalLine.SetPosition(1, m_VerticalDirection * m_VerticalInput * m_LineLength);
 

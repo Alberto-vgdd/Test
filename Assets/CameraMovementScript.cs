@@ -10,10 +10,12 @@ public class CameraMovementScript : MonoBehaviour
 
     //The distance between the Target and the Camera.
     public float m_CameraDistance;
+    public float m_CameraAvoidClippingDistance;
+    private Vector3 m_CameraToTargetDefaultVector;
 
     //These two variables are used to calculate the camera "Spherical" position around the player.
-    private Vector3 m_CameraToPlayerDistance;
-    private Quaternion m_CameraToPlayerRotation;
+    private Vector3 m_CameraToTargetVector;
+    private Quaternion m_CameraToTargetRotation;
 
     //Inputs to control de camera
     private float m_HorizontalInput;
@@ -37,12 +39,12 @@ public class CameraMovementScript : MonoBehaviour
     //Raycast to shorten m_CameraToPlayerDistance in case of obstacle
     private RaycastHit m_CameraRayCastHit;
     private Ray m_CameraRay;
-
+    private float m_HitToTargetDistance;
 
     void Start ()
     {
         m_CameraTranform = transform;
-
+        m_CameraToTargetDefaultVector = new Vector3(0f, 0f, m_CameraDistance);
         m_HorizontalRotation = 0f;
         m_VerticalRotation = 15f;
 
@@ -56,43 +58,49 @@ public class CameraMovementScript : MonoBehaviour
 
 	void LateUpdate ()
     {
-        if (Mathf.Abs(m_HorizontalRotation) >= 360)
+
+        UpdateRotations();
+
+
+
+        
+
+        m_CameraRay.direction = -m_CameraTranform.forward;
+        m_CameraRay.origin = m_TargetTransform.position;
+
+
+        if (Physics.Raycast(m_CameraRay, out m_CameraRayCastHit, m_CameraDistance))
         {
-            m_HorizontalRotation = 0f;
+            m_HitToTargetDistance = Mathf.Abs(Vector3.Magnitude(m_CameraRayCastHit.point - m_TargetTransform.position));
+            m_CameraToTargetVector = -m_CameraToTargetDefaultVector.normalized * m_HitToTargetDistance * m_CameraAvoidClippingDistance;
         }
+        else
+        {
+            m_CameraToTargetVector  = -m_CameraToTargetDefaultVector;
+        }
+  
+        m_CameraToTargetRotation = Quaternion.Euler(m_VerticalRotation, m_HorizontalRotation, 0f);
+        m_CameraTranform.position = m_TargetTransform.position +m_CameraToTargetRotation * m_CameraToTargetVector;
+
+
+
+        m_CameraTranform.LookAt(m_TargetTransform);
+
+
+    }
+
+    void UpdateRotations()
+    {
+     
         m_HorizontalRotation += m_HorizontalInput * m_CameraRotationSpeed * Time.deltaTime;
         m_VerticalRotation += m_VerticalInput * m_CameraRotationSpeed * Time.deltaTime;
 
         m_VerticalRotation = Mathf.Min(m_VerticalRotation, m_MaxVerticalRotation);
         m_VerticalRotation = Mathf.Max(m_VerticalRotation, m_MinVerticalRotation);
 
-
-        m_CameraRay.direction = -m_CameraTranform.forward;
-        m_CameraRay.origin = m_TargetTransform.position;
-
-        if (Physics.Raycast(m_CameraRay, out m_CameraRayCastHit, m_CameraDistance))
+        if (Mathf.Abs(m_HorizontalRotation) >= 360)
         {
-          m_CameraToPlayerDistance =  new Vector3(0f, 0f, -Mathf.Abs(Vector3.Magnitude(m_CameraRayCastHit.point - m_TargetTransform.position))+0.275f);
+            m_HorizontalRotation = 0f;
         }
-        else
-        {
-            m_CameraToPlayerDistance  = Vector3.Lerp(m_CameraToPlayerDistance, new Vector3(0f, 0f, -m_CameraDistance), m_CameraSmooth);
-        }
-  
-
-
-
-
-        m_CameraToPlayerRotation = Quaternion.Euler(m_VerticalRotation, m_HorizontalRotation, 0f);
-        m_CameraTranform.position = m_TargetTransform.position +m_CameraToPlayerRotation * m_CameraToPlayerDistance;
-
-
-        //para que la cámara no atraviese objetos se puede hacer un raycast con la dirección 
-        //-forward de manera que si hay colision antes de el valor de m_CameraDistance,
-        // el vector CameraDistanceToPlayer se ha de modificar
-
-
-        m_CameraTranform.LookAt(m_TargetTransform);
-
     }
 }
