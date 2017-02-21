@@ -11,10 +11,6 @@ public class PlayerMovementScript : MonoBehaviour
     public float m_HorizontalInput;
     public float m_VerticalInput;
 
-    public LineRenderer m_HorizontalLine;
-    public LineRenderer m_VerticalLine;
-    public float m_LineLength;
-
     public Vector3 m_HorizontalDirection;
     public Vector3 m_VerticalDirection;
     
@@ -22,8 +18,6 @@ public class PlayerMovementScript : MonoBehaviour
 	// Use this for initialization
 	void Start ()
     {
-        m_HorizontalLine.SetPosition(0, m_Target.position);
-        m_VerticalLine.SetPosition(0, m_Target.position);
     }
 	
 	// Update is called once per frame
@@ -36,8 +30,6 @@ public class PlayerMovementScript : MonoBehaviour
         m_VerticalDirection = Vector3.Scale(m_Camera.TransformVector(Vector3.forward), new Vector3(1f, 0f, 1f)).normalized;
 
         m_Target.Translate((m_HorizontalDirection* m_HorizontalInput + m_VerticalDirection* m_VerticalInput  ).normalized* 10f* Time.deltaTime);
-        m_HorizontalLine.SetPosition(1, m_HorizontalDirection * m_HorizontalInput * m_LineLength);
-        m_VerticalLine.SetPosition(1, m_VerticalDirection * m_VerticalInput * m_LineLength);
 
     }
 }
