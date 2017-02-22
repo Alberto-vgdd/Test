@@ -6,7 +6,7 @@ public class CameraMovementScript : MonoBehaviour
 {
     //Camera transform and Target transform
     private Transform m_CameraTranform;
-    public Transform m_TargetTransform;
+    public Transform m_CameraTargetTransform;
 
     //The distance between the Target and the Camera.
     public float m_CameraDistance;
@@ -66,12 +66,12 @@ public class CameraMovementScript : MonoBehaviour
         
 
         m_CameraRay.direction = -m_CameraTranform.forward;
-        m_CameraRay.origin = m_TargetTransform.position;
+        m_CameraRay.origin = m_CameraTargetTransform.position;
 
 
         if (Physics.Raycast(m_CameraRay, out m_CameraRayCastHit, m_CameraDistance))
         {
-            m_HitToTargetDistance = Mathf.Abs(Vector3.Magnitude(m_CameraRayCastHit.point - m_TargetTransform.position));
+            m_HitToTargetDistance = Mathf.Abs(Vector3.Magnitude(m_CameraRayCastHit.point - m_CameraTargetTransform.position));
             m_CameraToTargetVector = -m_CameraToTargetDefaultVector.normalized * m_HitToTargetDistance * m_CameraAvoidClippingDistance;
         }
         else
@@ -80,11 +80,11 @@ public class CameraMovementScript : MonoBehaviour
         }
   
         m_CameraToTargetRotation = Quaternion.Euler(m_VerticalRotation, m_HorizontalRotation, 0f);
-        m_CameraTranform.position = m_TargetTransform.position +m_CameraToTargetRotation * m_CameraToTargetVector;
+        m_CameraTranform.position = m_CameraTargetTransform.position +m_CameraToTargetRotation * m_CameraToTargetVector;
 
 
 
-        m_CameraTranform.LookAt(m_TargetTransform);
+        m_CameraTranform.LookAt(m_CameraTargetTransform);
 
 
     }
