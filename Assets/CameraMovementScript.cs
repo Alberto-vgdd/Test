@@ -74,24 +74,21 @@ public class CameraMovementScript : MonoBehaviour
 
     void UpdateRotations()
     {
-        if (!m_EnemyLocked)
-        {
-            m_HorizontalRotation += m_HorizontalInput * m_CameraRotationSpeed * Time.deltaTime;
-            m_VerticalRotation += m_VerticalInput * m_CameraRotationSpeed * Time.deltaTime;
 
-            m_VerticalRotation = Mathf.Min(m_VerticalRotation, m_MaxVerticalRotation);
-            m_VerticalRotation = Mathf.Max(m_VerticalRotation, m_MinVerticalRotation);
 
-            if (Mathf.Abs(m_HorizontalRotation) >= 360)
-            {
-                m_HorizontalRotation = 0f;
-            }
-        }
-        else
+        m_HorizontalRotation += m_HorizontalInput * m_CameraRotationSpeed * Time.deltaTime;
+        m_VerticalRotation += m_VerticalInput * m_CameraRotationSpeed * Time.deltaTime;
+ 
+        
+
+        m_VerticalRotation = Mathf.Min(m_VerticalRotation, m_MaxVerticalRotation);
+        m_VerticalRotation = Mathf.Max(m_VerticalRotation, m_MinVerticalRotation);
+
+        if (Mathf.Abs(m_HorizontalRotation) >= 360)
         {
-            m_VerticalRotation = 15f;
             m_HorizontalRotation = 0f;
         }
+
         
     }
 
@@ -109,28 +106,28 @@ public class CameraMovementScript : MonoBehaviour
             }
             else
             {
-                m_CameraDistanceVector = -m_CameraDistanceDefaultVector;
+                 m_CameraDistanceVector = -m_CameraDistanceDefaultVector;
             }
         }
-        else
-        {
-            m_CameraDistanceVector = -m_CameraDistanceDefaultVector;
-        }
-        
     }
 
     void SetCameraPositionAndRotation()
     {
-        m_CameraDistanceRotation = Quaternion.Euler(m_VerticalRotation, m_HorizontalRotation, 0f);
-        m_CameraTranform.position = m_PlayerTransform.position + m_CameraDistanceRotation * m_CameraDistanceVector;
 
-        if (!m_EnemyLocked)
+       
+
+
+        if (m_EnemyLocked)
         {
-            m_CameraTranform.LookAt(m_PlayerTransform);
+          
+            m_CameraTranform.position = m_PlayerTransform.position - m_CameraTranform.forward  *m_CameraDistance;
+            m_CameraTranform.LookAt(m_EnemiesTransform[0]);
         }
         else
         {
-            m_CameraTranform.LookAt(m_EnemiesTransform[0]);
+            m_CameraDistanceRotation = Quaternion.Euler(m_VerticalRotation, m_HorizontalRotation, 0f);
+            m_CameraTranform.position = m_PlayerTransform.position + m_CameraDistanceRotation * m_CameraDistanceVector;
+            m_CameraTranform.LookAt(m_PlayerTransform);
         }
         
     }
