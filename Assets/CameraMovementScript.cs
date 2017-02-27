@@ -74,12 +74,26 @@ public class CameraMovementScript : MonoBehaviour
 
     void UpdateRotations()
     {
+        if (m_EnemyLocked)
+        {
+            Vector3 PlayerToEnemy = Vector3.Scale(m_EnemiesTransform[0].position - m_PlayerTransform.position, new Vector3(1f, 0f, 1f)).normalized;
+            Vector3 PlayerToCamera = Vector3.Scale( m_CameraTranform.position - m_PlayerTransform.position, new Vector3(1f, 0f, 1f)).normalized;
+
+            float angle= Vector3.Angle( PlayerToEnemy, PlayerToCamera);
+            float sign = Mathf.Sign(Vector3.Dot(Vector3.up, Vector3.Cross( PlayerToEnemy, PlayerToCamera)));
+           
+           m_HorizontalRotation = ( (angle * sign) + 180) % 360;
 
 
-        m_HorizontalRotation += m_HorizontalInput * m_CameraRotationSpeed * Time.deltaTime;
+        }
+        else
+        {
+            m_HorizontalRotation += m_HorizontalInput * m_CameraRotationSpeed * Time.deltaTime;
+        }
+
+
         m_VerticalRotation += m_VerticalInput * m_CameraRotationSpeed * Time.deltaTime;
- 
-        
+
 
         m_VerticalRotation = Mathf.Min(m_VerticalRotation, m_MaxVerticalRotation);
         m_VerticalRotation = Mathf.Max(m_VerticalRotation, m_MinVerticalRotation);
@@ -116,19 +130,18 @@ public class CameraMovementScript : MonoBehaviour
 
        
 
+        m_CameraDistanceRotation = Quaternion.Euler(m_VerticalRotation, m_HorizontalRotation, 0f);
+        m_CameraTranform.position = m_PlayerTransform.position + m_CameraDistanceRotation * m_CameraDistanceVector;
 
         if (m_EnemyLocked)
         {
-          
-            m_CameraTranform.position = m_PlayerTransform.position - m_CameraTranform.forward  *m_CameraDistance;
             m_CameraTranform.LookAt(m_EnemiesTransform[0]);
         }
         else
         {
-            m_CameraDistanceRotation = Quaternion.Euler(m_VerticalRotation, m_HorizontalRotation, 0f);
-            m_CameraTranform.position = m_PlayerTransform.position + m_CameraDistanceRotation * m_CameraDistanceVector;
             m_CameraTranform.LookAt(m_PlayerTransform);
         }
+           
         
     }
 
@@ -136,13 +149,16 @@ public class CameraMovementScript : MonoBehaviour
     {
         m_EnemiesTransform = m_PlayerAgroScript.m_NearbyEnemies;
 
-        if (m_EnemiesTransform[0] != null)
+        if (m_EnemiesTransform[0] != null )
         {
             m_EnemyLocked = true;
+           
+          
         }
         else
         {
             m_EnemyLocked = false;
+        
         }
     }
 }
