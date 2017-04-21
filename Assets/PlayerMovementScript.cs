@@ -67,8 +67,7 @@ public class PlayerMovementScript : MonoBehaviour
                 m_Target.transform.forward = Vector3.SmoothDamp(m_Target.transform.forward, m_VerticalDirection, ref m_TurnSpeed, m_TurnSmooth);
 
             }
-
-            m_Target.Translate(m_Target.InverseTransformVector(m_HorizontalDirection * m_HorizontalInput + m_VerticalDirection * m_VerticalInput).normalized * m_MovementSpeed * Time.deltaTime);
+            m_Target.Translate(m_Target.InverseTransformVector(m_HorizontalDirection * m_HorizontalInput + m_VerticalDirection * m_VerticalInput) * m_MovementSpeed * Time.deltaTime);
         }
     }
 

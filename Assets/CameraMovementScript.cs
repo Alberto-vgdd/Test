@@ -30,7 +30,7 @@ public class CameraMovementScript : MonoBehaviour
     public float m_CameraRotationSpeed;
 
     //This is used to smooth Lerp between positions.
-    public float m_CameraSmooth;
+    public float m_CameraLockSmooth;
 
     //This values limit the Y axis of the camera
     public float m_MaxVerticalRotation;
@@ -80,17 +80,8 @@ public class CameraMovementScript : MonoBehaviour
     {
         if (!m_EnemyLocked)
         {
-            m_HorizontalRotation += m_HorizontalInput * m_CameraRotationSpeed * Time.deltaTime;
-            m_VerticalRotation += m_VerticalInput * m_CameraRotationSpeed * Time.deltaTime;
-
-
-            m_VerticalRotation = Mathf.Min(m_VerticalRotation, m_MaxVerticalRotation);
-            m_VerticalRotation = Mathf.Max(m_VerticalRotation, m_MinVerticalRotation);
-
-            if (Mathf.Abs(m_HorizontalRotation) >= 360)
-            {
-                m_HorizontalRotation = 0f;
-            }
+            m_HorizontalRotation = m_HorizontalInput * m_CameraRotationSpeed * Time.deltaTime;
+            m_VerticalRotation = m_VerticalInput * m_CameraRotationSpeed * Time.deltaTime;
         }
         
 
@@ -105,20 +96,27 @@ public class CameraMovementScript : MonoBehaviour
         if (Physics.Raycast(m_CameraRay, out m_CameraRayCastHit, m_CameraDistance))
         {
             m_HitToPlayerDistance = Mathf.Abs(Vector3.Magnitude(m_CameraRayCastHit.point - m_PlayerTransform.position));
-            m_CameraDistanceVector = -Vector3.forward * (m_HitToPlayerDistance);
+            
+            if (m_EnemyLocked)
+            {
+                m_CameraDistanceVector = -m_PlayerTransform.forward * (m_HitToPlayerDistance);
+            }
+            else
+            {
+                m_CameraDistanceVector = -Vector3.forward * (m_HitToPlayerDistance);
+            }
         }
         else
-        {
+        {    
+            if (m_EnemyLocked)
+            {
+                m_CameraDistanceVector = -m_PlayerTransform.forward * (m_CameraDistance);
+            }
+            else
+            {
                 m_CameraDistanceVector = -m_CameraDistanceDefaultVector;
+            }
         }
-
-
-        if (m_EnemyLocked)
-        {
-            m_CameraDistanceVector = -m_PlayerTransform.forward*(m_CameraDistance+ m_EnemiesTransform[0].localScale.y) / 2;
-        }
-        
-        
     }
 
     void SetCameraPositionAndRotation()
@@ -127,20 +125,24 @@ public class CameraMovementScript : MonoBehaviour
 
         if (m_EnemyLocked)
         {
-            //m_CameraTranform.position = m_PlayerTransform.position +  m_CameraDistanceVector + new Vector3(0f,0.5f,0f);
-            //m_CameraTranform.LookAt(m_EnemiesTransform[0].position);
-
-            m_CameraTranform.position = Vector3.SmoothDamp(m_CameraTranform.position, m_PlayerTransform.position + m_CameraDistanceVector + new Vector3(0f, 0.5f, 0f), ref m_CameraSpeed, m_CameraSmooth);
+            m_CameraTranform.position = Vector3.SmoothDamp(m_CameraTranform.position, m_PlayerTransform.position + m_CameraDistanceVector + new Vector3(0f, 0.5f, 0f), ref m_CameraSpeed, m_CameraLockSmooth);
             m_CameraTranform.LookAt(m_EnemiesTransform[0].position);
         }
         else
         {
-            m_CameraDistanceRotation = Quaternion.Euler(m_VerticalRotation,m_HorizontalRotation, 0f);
+            if (((m_CameraTranform.position.y >= m_PlayerTransform.position.y + 2f) && m_VerticalRotation > 0) || ((m_CameraTranform.position.y <= m_PlayerTransform.position.y -1f) && m_VerticalRotation < 0))
+            {
+                m_CameraDistanceRotation = m_CameraTranform.rotation * Quaternion.Euler(0, m_HorizontalRotation, 0f);
+            }
+            else
+            {
+                m_CameraDistanceRotation = m_CameraTranform.rotation * Quaternion.Euler(m_VerticalRotation, m_HorizontalRotation, 0f);
+            }
+            
             m_CameraTranform.position = m_PlayerTransform.position + m_CameraDistanceRotation * m_CameraDistanceVector;
             m_CameraTranform.LookAt(m_PlayerTransform);
         }
-        
-        
+
     }
 
     void UpdateLockOnObjectives()
