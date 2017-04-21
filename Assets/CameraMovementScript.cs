@@ -46,6 +46,11 @@ public class CameraMovementScript : MonoBehaviour
     private Ray m_CameraRay;
     private float m_HitToPlayerDistance;
 
+
+    //Lock On Variables
+    private float m_DesiredHorizontalRotation;
+    private float m_speedlol;
+
     void Start ()
     {
         m_CameraTranform = transform;
@@ -74,24 +79,8 @@ public class CameraMovementScript : MonoBehaviour
 
     void UpdateRotations()
     {
-        if (m_EnemyLocked)
-        {
-            Vector3 PlayerToEnemy = Vector3.Scale(m_EnemiesTransform[0].position - m_PlayerTransform.position, new Vector3(1f, 0f, 1f)).normalized;
-            Vector3 PlayerToCamera = Vector3.Scale( m_CameraTranform.position - m_PlayerTransform.position, new Vector3(1f, 0f, 1f)).normalized;
 
-            float angle= Vector3.Angle( PlayerToEnemy, PlayerToCamera);
-            float sign = Mathf.Sign(Vector3.Dot(Vector3.up, Vector3.Cross( PlayerToEnemy, PlayerToCamera)));
-           
-           m_HorizontalRotation = ( (angle * sign) + 180) % 360;
-
-
-        }
-        else
-        {
-            m_HorizontalRotation += m_HorizontalInput * m_CameraRotationSpeed * Time.deltaTime;
-        }
-
-
+        m_HorizontalRotation += m_HorizontalInput * m_CameraRotationSpeed * Time.deltaTime;
         m_VerticalRotation += m_VerticalInput * m_CameraRotationSpeed * Time.deltaTime;
 
 
@@ -103,45 +92,71 @@ public class CameraMovementScript : MonoBehaviour
             m_HorizontalRotation = 0f;
         }
 
+
+        if (m_EnemyLocked)
+        {
+            Vector3 playerToCameraVector = Vector3.Cross(m_CameraTranform.position - m_PlayerTransform.position, new Vector3(1f, 0f, 1f)).normalized;
+            Vector3 enemyToPlayerVector = Vector3.Cross(m_PlayerTransform.position - m_EnemiesTransform[0].position, new Vector3(1f, 0f, 1f)).normalized;
+
+            float angle = Vector3.Angle(playerToCameraVector, playerToCameraVector);
+            float sign = Mathf.Sign(Vector3.Dot(Vector3.up, Vector3.Cross(enemyToPlayerVector, playerToCameraVector)));
+
+            //m_DesiredHorizontalRotation = m_HorizontalRotation -angle * sign;
+            m_DesiredHorizontalRotation = -((angle * sign)+180)/360;
+            print(m_DesiredHorizontalRotation);
+
+        }
+        else
+        {
+            m_DesiredHorizontalRotation = m_HorizontalRotation;
+        }
+
         
+
+
+
     }
 
     void SetCameraDistanceVector()
     {
-        if (!m_EnemyLocked)
-        {
-            m_CameraRay.direction = -m_CameraTranform.forward;
-            m_CameraRay.origin = m_PlayerTransform.position;
 
-            if (Physics.Raycast(m_CameraRay, out m_CameraRayCastHit, m_CameraDistance))
-            {
-                m_HitToPlayerDistance = Mathf.Abs(Vector3.Magnitude(m_CameraRayCastHit.point - m_PlayerTransform.position));
-                m_CameraDistanceVector = -Vector3.forward * (m_HitToPlayerDistance);
-            }
-            else
-            {
-                 m_CameraDistanceVector = -m_CameraDistanceDefaultVector;
-            }
+        m_CameraRay.direction = -m_CameraTranform.forward;
+        m_CameraRay.origin = m_PlayerTransform.position;
+
+        if (Physics.Raycast(m_CameraRay, out m_CameraRayCastHit, m_CameraDistance))
+        {
+            m_HitToPlayerDistance = Mathf.Abs(Vector3.Magnitude(m_CameraRayCastHit.point - m_PlayerTransform.position));
+            m_CameraDistanceVector = -Vector3.forward * (m_HitToPlayerDistance);
         }
+        else
+        {
+                m_CameraDistanceVector = -m_CameraDistanceDefaultVector;
+        }
+        
+        
+        
     }
 
     void SetCameraPositionAndRotation()
     {
 
-       
-
-        m_CameraDistanceRotation = Quaternion.Euler(m_VerticalRotation, m_HorizontalRotation, 0f);
-        m_CameraTranform.position = m_PlayerTransform.position + m_CameraDistanceRotation * m_CameraDistanceVector;
 
         if (m_EnemyLocked)
         {
-            m_CameraTranform.LookAt(m_EnemiesTransform[0]);
+            //m_CameraDistanceRotation = Quaternion.Euler(m_VerticalRotation,0f, 0f);
+            //m_CameraTranform.position = m_PlayerTransform.position + m_CameraDistanceRotation *m_CameraDistanceVector;
+            //m_CameraTranform.LookAt((m_EnemiesTransform[0].position + m_PlayerTransform.position) / 2);
+            m_CameraDistanceRotation = Quaternion.Euler(m_VerticalRotation, 0f, 0f);
+            m_CameraTranform.position = m_PlayerTransform.position + m_CameraDistanceRotation * -m_PlayerTransform.forward*m_CameraDistance;
+            m_CameraTranform.LookAt((m_EnemiesTransform[0].position + m_PlayerTransform.position) / 2);
         }
         else
         {
+            m_CameraDistanceRotation = Quaternion.Euler(m_VerticalRotation,m_HorizontalRotation, 0f);
+            m_CameraTranform.position = m_PlayerTransform.position + m_CameraDistanceRotation * m_CameraDistanceVector;
             m_CameraTranform.LookAt(m_PlayerTransform);
         }
-           
+        
         
     }
 
