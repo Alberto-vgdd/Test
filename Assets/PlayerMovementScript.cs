@@ -37,6 +37,7 @@ public class PlayerMovementScript : MonoBehaviour
     {
         m_Camera = Camera.main.transform;
         m_Target = GameObject.Find("Player").transform;
+
     }
 	
 	// Update is called once per frame
@@ -47,28 +48,24 @@ public class PlayerMovementScript : MonoBehaviour
         m_HorizontalInput = Input.GetAxis("Horizontal");
         m_VerticalInput = Input.GetAxis("Vertical");
 
-        if (m_HorizontalInput != 0 || m_VerticalInput != 0)
-        {
+
             if (!m_EnemyLocked)
             {
                 m_HorizontalDirection = Vector3.Scale(m_Camera.TransformVector(Vector3.right), new Vector3(1f, 0f, 1f)).normalized;
                 m_VerticalDirection = Vector3.Scale(m_Camera.TransformVector(Vector3.forward), new Vector3(1f, 0f, 1f)).normalized;
-
-                //m_Target.transform.forward = (m_HorizontalDirection * m_HorizontalInput + m_VerticalDirection * m_VerticalInput).normalized;
                 m_Target.transform.forward = Vector3.SmoothDamp(m_Target.transform.forward, (m_HorizontalDirection * m_HorizontalInput + m_VerticalDirection * m_VerticalInput).normalized, ref m_TurnSpeed, m_TurnSmooth);
+   
             }
             else
             {
 
                 m_VerticalDirection = Vector3.Scale(m_EnemiesTransform[0].position - m_Target.position, new Vector3(1f, 0f, 1f)).normalized;
                 m_HorizontalDirection = Vector3.Cross(m_VerticalDirection, new Vector3(0f, -1f, 0f)).normalized;
-
-                //m_Target.transform.forward = (m_HorizontalDirection * m_HorizontalInput + m_VerticalDirection * m_VerticalInput).normalized;
                 m_Target.transform.forward = Vector3.SmoothDamp(m_Target.transform.forward, m_VerticalDirection, ref m_TurnSpeed, m_TurnSmooth);
 
             }
+
             m_Target.Translate(m_Target.InverseTransformVector(m_HorizontalDirection * m_HorizontalInput + m_VerticalDirection * m_VerticalInput) * m_MovementSpeed * Time.deltaTime);
-        }
     }
 
 
