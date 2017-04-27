@@ -26,8 +26,6 @@ public class PlayerMovementScript : MonoBehaviour
 
     //-----------------------------------------------
     //TEMPORARY ENEMY TARGET
-    public PlayerAgroScript m_PlayerAgroScript;
-    public Transform[] m_EnemiesTransform;
     private bool m_EnemyLocked;
     //-----------------------------------------------
 
@@ -59,7 +57,7 @@ public class PlayerMovementScript : MonoBehaviour
             else
             {
 
-                m_VerticalDirection = Vector3.Scale(m_EnemiesTransform[0].position - m_Target.position, new Vector3(1f, 0f, 1f)).normalized;
+            m_VerticalDirection = Vector3.Scale(GlobalData.LockableEnemies.First.Value.position - m_Target.position, new Vector3(1f, 0f, 1f)).normalized;
                 m_HorizontalDirection = Vector3.Cross(m_VerticalDirection, new Vector3(0f, -1f, 0f)).normalized;
                 m_Target.transform.forward = Vector3.SmoothDamp(m_Target.transform.forward, m_VerticalDirection, ref m_TurnSpeed, m_TurnSmooth);
 
@@ -74,18 +72,20 @@ public class PlayerMovementScript : MonoBehaviour
 
     void UpdateLockOnObjectives()
     {
-        m_EnemiesTransform = m_PlayerAgroScript.m_NearbyEnemies;
-
-        if (m_EnemiesTransform[0] != null)
+        if (Input.GetButtonDown("Right Thumb"))
         {
-            m_EnemyLocked = true;
-
-
+            if (m_EnemyLocked)
+            {
+                m_EnemyLocked = false;
+            }
+            else
+            {
+                if (GlobalData.LockableEnemies.First.Value != null )
+                {
+                    m_EnemyLocked = true;
+                }
+            }
         }
-        else
-        {
-            m_EnemyLocked = false;
 
-        }
     }
 }

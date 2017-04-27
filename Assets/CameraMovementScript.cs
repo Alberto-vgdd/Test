@@ -9,8 +9,6 @@ public class CameraMovementScript : MonoBehaviour
     public Transform m_PlayerTransform;
 
     //Enemies target
-    private PlayerAgroScript m_PlayerAgroScript;
-    public Transform[] m_EnemiesTransform;
     private bool m_EnemyLocked;
 
     //The distance between the Target and the Camera.
@@ -56,9 +54,6 @@ public class CameraMovementScript : MonoBehaviour
         m_CameraDistanceDefaultVector = new Vector3(0f, 0f, m_CameraDistance);
         m_HorizontalRotation = 0f;
         m_VerticalRotation = 15f;
-
-        m_PlayerAgroScript = m_PlayerTransform.GetComponent<PlayerAgroScript>();
-
     }
 
     void Update()
@@ -70,7 +65,6 @@ public class CameraMovementScript : MonoBehaviour
 	void LateUpdate ()
     {
         UpdateLockOnObjectives();
-
         UpdateRotations();
         SetCameraDistanceVector();
         SetCameraPositionAndRotation();
@@ -126,7 +120,7 @@ public class CameraMovementScript : MonoBehaviour
         if (m_EnemyLocked)
         {
             m_CameraTranform.position = Vector3.SmoothDamp(m_CameraTranform.position, m_PlayerTransform.position + m_CameraDistanceVector + new Vector3(0f, 0.5f, 0f), ref m_CameraSpeed, m_CameraLockSmooth);
-            m_CameraTranform.LookAt(m_EnemiesTransform[0].position);
+            m_CameraTranform.LookAt(GlobalData.LockableEnemies.First.Value.position);
         }
         else
         {
@@ -147,18 +141,19 @@ public class CameraMovementScript : MonoBehaviour
 
     void UpdateLockOnObjectives()
     {
-        m_EnemiesTransform = m_PlayerAgroScript.m_NearbyEnemies;
-
-        if (m_EnemiesTransform[0] != null )
+        if (Input.GetButtonDown("Right Thumb"))
         {
-            m_EnemyLocked = true;
-           
-          
-        }
-        else
-        {
-            m_EnemyLocked = false;
-        
+            if (m_EnemyLocked)
+            {
+                m_EnemyLocked = false;
+            }
+            else
+            {
+                if (GlobalData.LockableEnemies.First.Value != null )
+                {
+                    m_EnemyLocked = true;
+                }
+            }
         }
     }
 }
