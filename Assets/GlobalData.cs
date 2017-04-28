@@ -5,4 +5,5 @@ using UnityEngine;
 public static class GlobalData
 {
     public static LinkedList<Transform> LockableEnemies; 
+    public static bool EnemyLocked;
 }

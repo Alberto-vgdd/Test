@@ -141,19 +141,6 @@ public class CameraMovementScript : MonoBehaviour
 
     void UpdateLockOnObjectives()
     {
-        if (Input.GetButtonDown("Right Thumb"))
-        {
-            if (m_EnemyLocked)
-            {
-                m_EnemyLocked = false;
-            }
-            else
-            {
-                if (GlobalData.LockableEnemies.First.Value != null )
-                {
-                    m_EnemyLocked = true;
-                }
-            }
-        }
+        m_EnemyLocked = GlobalData.EnemyLocked;
     }
 }

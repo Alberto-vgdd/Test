@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class CameraEnemyTracker : MonoBehaviour 
 {
-
+    
 	// Use this for initialization
     void Awake()
     {
@@ -14,7 +14,7 @@ public class CameraEnemyTracker : MonoBehaviour
 	// Update is called once per frame
 	void Update () 
     {
-		
+        UpdateLockOnObjectives();
 	}
 
     void OnTriggerEnter(Collider collider)
@@ -33,5 +33,28 @@ public class CameraEnemyTracker : MonoBehaviour
             GlobalData.LockableEnemies.Remove(collider.transform);
         }
 
+    }
+
+    void UpdateLockOnObjectives()
+    {
+        if (Input.GetButtonDown("Right Thumb"))
+        {
+            if (GlobalData.EnemyLocked)
+            {
+                GlobalData.EnemyLocked = false;
+            }
+            else
+            {
+                if (GlobalData.LockableEnemies.First != null )
+                {
+                    GlobalData.EnemyLocked = true;
+                }
+            }
+        }
+
+        if (GlobalData.EnemyLocked && GlobalData.LockableEnemies.First == null)
+        {
+            GlobalData.EnemyLocked = false;
+        }
     }
 }

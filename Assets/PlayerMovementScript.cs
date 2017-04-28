@@ -57,7 +57,7 @@ public class PlayerMovementScript : MonoBehaviour
             else
             {
 
-            m_VerticalDirection = Vector3.Scale(GlobalData.LockableEnemies.First.Value.position - m_Target.position, new Vector3(1f, 0f, 1f)).normalized;
+                m_VerticalDirection = Vector3.Scale(GlobalData.LockableEnemies.First.Value.position - m_Target.position, new Vector3(1f, 0f, 1f)).normalized;
                 m_HorizontalDirection = Vector3.Cross(m_VerticalDirection, new Vector3(0f, -1f, 0f)).normalized;
                 m_Target.transform.forward = Vector3.SmoothDamp(m_Target.transform.forward, m_VerticalDirection, ref m_TurnSpeed, m_TurnSmooth);
 
@@ -72,20 +72,6 @@ public class PlayerMovementScript : MonoBehaviour
 
     void UpdateLockOnObjectives()
     {
-        if (Input.GetButtonDown("Right Thumb"))
-        {
-            if (m_EnemyLocked)
-            {
-                m_EnemyLocked = false;
-            }
-            else
-            {
-                if (GlobalData.LockableEnemies.First.Value != null )
-                {
-                    m_EnemyLocked = true;
-                }
-            }
-        }
-
+        m_EnemyLocked = GlobalData.EnemyLocked;
     }
 }
