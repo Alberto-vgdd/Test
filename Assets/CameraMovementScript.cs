@@ -28,7 +28,7 @@ public class CameraMovementScript : MonoBehaviour
     public float m_CameraRotationSpeed;
 
     //This is used to smooth Lerp between positions.
-    public float m_CameraLockSmooth;
+    public float m_CameraLookSmooth;
 
     //This values limit the Y axis of the camera
     public float m_MaxVerticalRotation;
@@ -47,6 +47,9 @@ public class CameraMovementScript : MonoBehaviour
 
     //Lock On Variables
     private Vector3 m_CameraSpeed;
+    private Vector3 m_CameraLookSpeed;
+    private Vector3 m_CameraTarget;
+    private float m_cameraSpeedFloat;
 
     void Start ()
     {
@@ -54,6 +57,8 @@ public class CameraMovementScript : MonoBehaviour
         m_CameraDistanceDefaultVector = new Vector3(0f, 0f, m_CameraDistance);
         m_HorizontalRotation = 0f;
         m_VerticalRotation = 15f;
+
+
     }
 
     void Update()
@@ -64,7 +69,7 @@ public class CameraMovementScript : MonoBehaviour
 
 	void LateUpdate ()
     {
-        UpdateLockOnObjectives();
+        UpdateLockOn();
         UpdateRotations();
         SetCameraDistanceVector();
         SetCameraPositionAndRotation();
@@ -93,7 +98,7 @@ public class CameraMovementScript : MonoBehaviour
             
             if (m_EnemyLocked)
             {
-                m_CameraDistanceVector = -m_PlayerTransform.forward * (m_HitToPlayerDistance);
+                m_CameraDistanceVector = (m_PlayerTransform.position-GlobalData.LockedEnemyTransform.position).normalized * (m_HitToPlayerDistance)  ;
             }
             else
             {
@@ -104,7 +109,7 @@ public class CameraMovementScript : MonoBehaviour
         {    
             if (m_EnemyLocked)
             {
-                m_CameraDistanceVector = -m_PlayerTransform.forward * (m_CameraDistance);
+                m_CameraDistanceVector = (m_PlayerTransform.position-GlobalData.LockedEnemyTransform.position).normalized * m_CameraDistance;
             }
             else
             {
@@ -116,11 +121,10 @@ public class CameraMovementScript : MonoBehaviour
     void SetCameraPositionAndRotation()
     {
 
-
-        if (m_EnemyLocked)
+       if (m_EnemyLocked)
         {
-            m_CameraTranform.position = Vector3.SmoothDamp(m_CameraTranform.position, m_PlayerTransform.position + m_CameraDistanceVector + new Vector3(0f, 0.5f, 0f), ref m_CameraSpeed, m_CameraLockSmooth);
-            m_CameraTranform.LookAt(GlobalData.LockableEnemies.First.Value.position);
+            m_CameraTranform.position = Vector3.SmoothDamp(m_CameraTranform.position, m_PlayerTransform.position + m_CameraDistanceVector + new Vector3(0f, 0.5f, 0f), ref m_CameraSpeed, m_CameraLookSmooth);
+            m_CameraTarget = Vector3.SmoothDamp(m_CameraTarget, GlobalData.LockedEnemyTransform.position, ref m_CameraLookSpeed, m_CameraLookSmooth);
         }
         else
         {
@@ -134,13 +138,17 @@ public class CameraMovementScript : MonoBehaviour
             }
             
             m_CameraTranform.position = m_PlayerTransform.position + m_CameraDistanceRotation * m_CameraDistanceVector;
-            m_CameraTranform.LookAt(m_PlayerTransform);
+            m_CameraTarget = m_PlayerTransform.position;
+
         }
+
+        m_CameraTranform.LookAt(m_CameraTarget);
 
     }
 
-    void UpdateLockOnObjectives()
+    void UpdateLockOn()
     {
-        m_EnemyLocked = GlobalData.EnemyLocked;
+         m_EnemyLocked = GlobalData.EnemyLocked;
+
     }
 }
