@@ -27,10 +27,6 @@ public class CameraMovementScript : MonoBehaviour
     //The degrees per second the camera is going to turn.
     public float m_CameraRotationSpeed;
 
-    //This is used to smooth Lerp between positions.
-    public float m_CameraLookSmooth;
-    public float m_CameraSmooth;
-
     //This values limit the Y axis of the camera
     public float m_MaxVerticalRotation;
     public float m_MinVerticalRotation;
@@ -50,7 +46,14 @@ public class CameraMovementScript : MonoBehaviour
     private Vector3 m_CameraSpeed;
     private Vector3 m_CameraLookSpeed;
     private Vector3 m_CameraTarget;
-    private float m_cameraSpeedFloat;
+
+    //This is used to smooth interpolate between camera targets. (Time.deltaTime required)
+    public float m_CameraLockSmooth;
+    public float m_CameraUnlockSmooth;
+
+    private bool m_EnemyJustUnlocked;
+    private float m_TimeSinceLastUnlock;
+    public float m_RecoveryTimeAfterUnlock;
 
     void Start ()
     {
@@ -58,6 +61,9 @@ public class CameraMovementScript : MonoBehaviour
         m_CameraDistanceDefaultVector = new Vector3(0f, 0f, m_CameraDistance);
         m_HorizontalRotation = 0f;
         m_VerticalRotation = 15f;
+
+        m_EnemyJustUnlocked = false;
+        m_TimeSinceLastUnlock = 0;
 
 
     }
@@ -124,8 +130,8 @@ public class CameraMovementScript : MonoBehaviour
 
        if (m_EnemyLocked)
         {
-            m_CameraTranform.position = Vector3.SmoothDamp(m_CameraTranform.position, m_PlayerTransform.position + m_CameraDistanceVector , ref m_CameraSpeed, m_CameraLookSmooth);
-            m_CameraTarget = Vector3.SmoothDamp(m_CameraTarget, GlobalData.LockedEnemyTransform.position, ref m_CameraLookSpeed, m_CameraLookSmooth);
+            m_CameraTranform.position = Vector3.SmoothDamp(m_CameraTranform.position, m_PlayerTransform.position + m_CameraDistanceVector , ref m_CameraSpeed, m_CameraLockSmooth * Time.deltaTime);
+            m_CameraTarget = Vector3.SmoothDamp(m_CameraTarget, GlobalData.LockedEnemyTransform.position, ref m_CameraLookSpeed, m_CameraLockSmooth * Time.deltaTime);
             m_CameraTranform.LookAt(m_CameraTarget);
         }
         else
@@ -138,20 +144,40 @@ public class CameraMovementScript : MonoBehaviour
             {
                 m_CameraDistanceRotation = m_CameraTranform.rotation * Quaternion.Euler(m_VerticalRotation, m_HorizontalRotation, 0f);
             }
-            
-            m_CameraTranform.position = m_PlayerTransform.position+ (m_CameraDistanceRotation * m_CameraDistanceVector);
-            m_CameraTarget = m_PlayerTransform.position;
-            m_CameraTranform.LookAt(m_CameraTarget);
 
+                
+           
+            if (m_EnemyJustUnlocked)
+            {
+                m_CameraTranform.position = Vector3.SmoothDamp(m_CameraTranform.position, m_PlayerTransform.position + m_CameraDistanceRotation * m_CameraDistanceVector, ref m_CameraSpeed, m_CameraUnlockSmooth * Time.deltaTime);
+                m_CameraTarget = Vector3.Lerp(m_CameraTarget, m_PlayerTransform.position, m_TimeSinceLastUnlock /m_RecoveryTimeAfterUnlock);
+                m_CameraTranform.LookAt(m_CameraTarget);
+       
 
+                m_TimeSinceLastUnlock += Time.deltaTime;
+                if (m_TimeSinceLastUnlock >= m_RecoveryTimeAfterUnlock)
+                {
+                    m_EnemyJustUnlocked = false;
+                }
+            }
+            else
+            {
+                m_CameraTranform.position = m_PlayerTransform.position+ (m_CameraDistanceRotation * m_CameraDistanceVector);
+                m_CameraTarget = m_PlayerTransform.position;
+                m_CameraTranform.LookAt(m_CameraTarget);
+            }
+                
         }
-
-
-
+            
     }
 
     void UpdateLockOn()
     {
+        if (m_EnemyLocked && !GlobalData.EnemyLocked)
+        {
+            m_EnemyJustUnlocked = true;
+            m_TimeSinceLastUnlock = 0.0f;
+        }
          m_EnemyLocked = GlobalData.EnemyLocked;
 
     }
