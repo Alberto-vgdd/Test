@@ -10,7 +10,8 @@ public class TODO
     //      Raycast from player to avoid lock on through walls
 
     // PLAYER MOVEMENT SCRIPT
-    //      Make the player properly turn around when the stick is rapidly moved.
+    //      Make the player properly turn around when the stick is rapidly moved. 
+    //      The camera shakes when the player walks into a wall.
 
     // OUTSIDE UNITY
     //      Look for a Photoshop alternative.
