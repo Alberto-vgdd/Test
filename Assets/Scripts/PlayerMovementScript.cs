@@ -15,6 +15,7 @@ public class PlayerMovementScript : MonoBehaviour
     //Movement Axes for the player.
     private Vector3 m_HorizontalDirection;
     private Vector3 m_VerticalDirection;
+    private Vector3 m_MovementDirection;
 
     //ref value which is used to smoothly turn around.
     private Vector3 m_TurnSpeed;
@@ -44,21 +45,22 @@ public class PlayerMovementScript : MonoBehaviour
 
         if (!GlobalData.EnemyLocked)
         {
-                m_HorizontalDirection = Vector3.Scale(m_Camera.TransformVector(Vector3.right), new Vector3(1f, 0f, 1f)).normalized;
-                m_VerticalDirection = Vector3.Scale(m_Camera.TransformVector(Vector3.forward), new Vector3(1f, 0f, 1f)).normalized;
-                m_Target.transform.forward = Vector3.SmoothDamp(m_Target.transform.forward, (m_HorizontalDirection * m_HorizontalInput + m_VerticalDirection * m_VerticalInput).normalized, ref m_TurnSpeed, m_TurnSmooth);
-   
+            m_HorizontalDirection = Vector3.Scale(m_Camera.TransformVector(Vector3.right), new Vector3(1f, 0f, 1f)).normalized;
+            m_VerticalDirection = Vector3.Scale(m_Camera.TransformVector(Vector3.forward), new Vector3(1f, 0f, 1f)).normalized;
+            m_MovementDirection = m_HorizontalDirection * m_HorizontalInput + m_VerticalDirection * m_VerticalInput;
+            m_Target.transform.forward = Vector3.SmoothDamp(m_Target.transform.forward, m_MovementDirection.normalized, ref m_TurnSpeed, m_TurnSmooth*Time.deltaTime);
         }
         else
         {
 
             m_VerticalDirection = Vector3.Scale(GlobalData.LockedEnemyTransform.position - m_Target.position, new Vector3(1f, 0f, 1f)).normalized;
             m_HorizontalDirection = Vector3.Cross(m_VerticalDirection, new Vector3(0f, -1f, 0f)).normalized;
-            m_Target.transform.forward = Vector3.SmoothDamp(m_Target.transform.forward, m_VerticalDirection, ref m_TurnSpeed, m_TurnSmooth);
+            m_MovementDirection = m_HorizontalDirection * m_HorizontalInput + m_VerticalDirection * m_VerticalInput;
+            m_Target.transform.forward = Vector3.SmoothDamp(m_Target.transform.forward, m_VerticalDirection, ref m_TurnSpeed, m_TurnSmooth*Time.deltaTime);
 
         }
 
-        m_Target.Translate(m_Target.InverseTransformVector(m_HorizontalDirection * m_HorizontalInput + m_VerticalDirection * m_VerticalInput) * m_MovementSpeed * Time.deltaTime);
+        m_Target.Translate(m_Target.InverseTransformVector(m_MovementDirection) * m_MovementSpeed * Time.deltaTime);
     }
 
 }
