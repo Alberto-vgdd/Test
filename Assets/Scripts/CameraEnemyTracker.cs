@@ -4,13 +4,21 @@ using UnityEngine;
 
 public class CameraEnemyTracker : MonoBehaviour 
 {
-    
+    private CameraMovementScript m_CameraMovementScript;
+
+
+    void Start()
+    {
+        m_CameraMovementScript = GetComponent<CameraMovementScript>();
+    }
+
+
     void Awake()
     {
         GlobalData.LockableEnemies = new List<Transform>();
     }
 	
-	
+
 	void Update () 
     {
         UpdateLockOn();
@@ -23,6 +31,7 @@ public class CameraEnemyTracker : MonoBehaviour
         {
             if (GlobalData.EnemyLocked)
             {
+                m_CameraMovementScript.LockOn();
                 GlobalData.EnemyLocked = false;
             }
             else
@@ -30,17 +39,24 @@ public class CameraEnemyTracker : MonoBehaviour
                 if (NumberOfEnemies() != 0)
                 {
                     LockClosestEnemy();
+                    m_CameraMovementScript.LockOn();
                     GlobalData.EnemyLocked = true;
+                }
+                else
+                {
+                    m_CameraMovementScript.CenterCamera();
                 }
             }
         }
 
         if (GlobalData.EnemyLocked && NumberOfEnemies() == 0)
         {
+            m_CameraMovementScript.LockOn();
             GlobalData.EnemyLocked = false;
         }
         else if (GlobalData.EnemyLocked && !ContainsEnemy(GlobalData.LockedEnemyTransform))
         {
+            m_CameraMovementScript.LockOn();
             GlobalData.EnemyLocked = false;
         }
     }
@@ -50,6 +66,7 @@ public class CameraEnemyTracker : MonoBehaviour
     {
         float closestDistance = float.MaxValue;
         float enemyDistance;
+
         foreach (Transform enemy in GlobalData.LockableEnemies)
         {
             enemyDistance = Mathf.Abs((GlobalData.PlayerTransform.position - enemy.position).magnitude);

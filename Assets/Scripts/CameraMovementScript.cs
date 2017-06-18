@@ -41,7 +41,6 @@ public class CameraMovementScript : MonoBehaviour
     private Ray m_CameraRay;
     private float m_HitToPlayerDistance;
 
-
     //Lock On Variables
     private Vector3 m_CameraSpeed;
     private Vector3 m_CameraLookSpeed;
@@ -55,15 +54,27 @@ public class CameraMovementScript : MonoBehaviour
     private float m_TimeSinceLastUnlock;
     public float m_RecoveryTimeAfterUnlock;
 
+
+    //Variables used to center de Camera
+    private bool m_CenterCamera;
+    private float m_CenterCameraTimer;
+    public float m_CenterCameraMaxTime;
+    private float m_AngleToRotate;
+
     void Start ()
     {
         m_CameraTranform = transform;
         m_CameraDistanceDefaultVector = new Vector3(0f, 0f, m_CameraDistance);
+
         m_HorizontalRotation = 0f;
         m_VerticalRotation = 15f;
 
+        m_EnemyLocked = false;
         m_EnemyJustUnlocked = false;
         m_TimeSinceLastUnlock = 0;
+
+        m_CenterCamera = false;
+        m_CenterCameraTimer = 0f;
 
 
     }
@@ -76,7 +87,6 @@ public class CameraMovementScript : MonoBehaviour
 
 	void LateUpdate ()
     {
-        UpdateLockOn();
         UpdateRotations();
         SetCameraDistanceVector();
         SetCameraPositionAndRotation();
@@ -86,10 +96,17 @@ public class CameraMovementScript : MonoBehaviour
     {
         if (!m_EnemyLocked)
         {
-            m_HorizontalRotation = m_HorizontalInput * m_CameraRotationSpeed * Time.deltaTime;
+            if (m_CenterCamera)
+            {
+                m_HorizontalRotation = (m_AngleToRotate / m_CenterCameraMaxTime) * Time.deltaTime;
+            }
+            else
+            {
+                m_HorizontalRotation = m_HorizontalInput * m_CameraRotationSpeed * Time.deltaTime;
+            }
+            
             m_VerticalRotation = m_VerticalInput * m_CameraRotationSpeed * Time.deltaTime;
         }
-        
 
     }
 
@@ -136,6 +153,15 @@ public class CameraMovementScript : MonoBehaviour
         }
         else
         {
+            if (m_CenterCamera)
+            {
+                m_CenterCameraTimer += Time.deltaTime; 
+
+                if (m_CenterCameraTimer >= m_CenterCameraMaxTime)
+                {
+                    m_CenterCamera = false;
+                }
+            }
             if (((m_CameraTranform.position.y >= m_PlayerTransform.position.y + 2f) && m_VerticalRotation > 0) || ((m_CameraTranform.position.y <= m_PlayerTransform.position.y -1f) && m_VerticalRotation < 0))
             {
                 m_CameraDistanceRotation = m_CameraTranform.rotation * Quaternion.Euler(0, m_HorizontalRotation, 0f);
@@ -170,15 +196,36 @@ public class CameraMovementScript : MonoBehaviour
         }
             
     }
+        
 
-    void UpdateLockOn()
+
+
+    public void CenterCamera()
     {
-        if (m_EnemyLocked && !GlobalData.EnemyLocked)
+
+        m_AngleToRotate = -Vector3.Angle( -m_PlayerTransform.forward,m_CameraTranform.position - m_PlayerTransform.position) * Mathf.Sign(Vector3.Dot(m_PlayerTransform.up, Vector3.Cross(-m_PlayerTransform.forward,m_CameraTranform.position - m_PlayerTransform.position))); 
+
+
+
+        if (Mathf.Abs(m_AngleToRotate) > 15f)
+        {
+            m_CenterCameraTimer = 0;
+            m_CenterCamera = true;
+        }
+    }
+
+
+
+    public void LockOn()
+    {
+        if (m_EnemyLocked)
         {
             m_EnemyJustUnlocked = true;
             m_TimeSinceLastUnlock = 0.0f;
         }
-         m_EnemyLocked = GlobalData.EnemyLocked;
 
+        m_EnemyLocked = !m_EnemyLocked;
     }
+
+
 }

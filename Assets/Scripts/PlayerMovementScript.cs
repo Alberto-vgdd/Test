@@ -20,9 +20,11 @@ public class PlayerMovementScript : MonoBehaviour
     //ref value which is used to smoothly turn around.
     private Vector3 m_TurnSpeed;
 
-    //values to create a smooth turning.
+    //values to create a smooth movement.
     public float m_MovementSpeed;
     public float m_TurnSmooth;
+    private Rigidbody m_TargetRigidbody;
+    private Vector3 m_TargetCurrentVelocity;
 
 
 
@@ -32,6 +34,7 @@ public class PlayerMovementScript : MonoBehaviour
         m_Camera = Camera.main.transform;
         m_Target = GameObject.Find("Player").transform;
         GlobalData.PlayerTransform = m_Target;
+        m_TargetRigidbody = m_Target.GetComponent<Rigidbody>();
 
     }
 	
@@ -60,7 +63,16 @@ public class PlayerMovementScript : MonoBehaviour
 
         }
 
-        m_Target.Translate(m_Target.InverseTransformVector(m_MovementDirection) * m_MovementSpeed * Time.deltaTime);
+
     }
+
+    void FixedUpdate()
+    {
+
+        //m_Target.Translate(m_MovementDirection * m_MovementSpeed * Time.fixedDeltaTime, Space.World);
+        m_TargetRigidbody.MovePosition(m_Target.position + m_MovementDirection * m_MovementSpeed * Time.fixedDeltaTime);
+
+    }
+       
 
 }
