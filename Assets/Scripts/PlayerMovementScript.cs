@@ -51,7 +51,6 @@ public class PlayerMovementScript : MonoBehaviour
             m_HorizontalDirection = Vector3.Scale(m_Camera.right, new Vector3(1f, 0f, 1f)).normalized;
             m_VerticalDirection = Vector3.Scale(m_Camera.forward, new Vector3(1f, 0f, 1f)).normalized;
             m_MovementDirection = m_HorizontalDirection * m_HorizontalInput + m_VerticalDirection * m_VerticalInput;
-            m_Target.transform.forward = Vector3.SmoothDamp(m_Target.transform.forward, m_MovementDirection.normalized, ref m_TurnSpeed, m_TurnSmooth*Time.deltaTime);
         }
         else
         {
@@ -59,20 +58,31 @@ public class PlayerMovementScript : MonoBehaviour
             m_VerticalDirection = Vector3.Scale(GlobalData.LockedEnemyTransform.position - m_Target.position, new Vector3(1f, 0f, 1f)).normalized;
             m_HorizontalDirection = Vector3.Cross(m_VerticalDirection, -m_Target.up).normalized;
             m_MovementDirection = m_HorizontalDirection * m_HorizontalInput + m_VerticalDirection * m_VerticalInput;
-            m_Target.transform.forward = Vector3.SmoothDamp(m_Target.transform.forward, m_VerticalDirection, ref m_TurnSpeed, m_TurnSmooth*Time.deltaTime);
-
         }
 
 
-       
     }
 
     void FixedUpdate()
     {
-     
-        //m_Target.Translate(m_MovementDirection * m_MovementSpeed * Time.fixedDeltaTime, Space.World);
-        m_TargetRigidbody.MovePosition(m_Target.position + m_MovementDirection * m_MovementSpeed * Time.fixedDeltaTime);
+        //Move the player
+        m_TargetRigidbody.velocity = m_MovementDirection * m_MovementSpeed + new Vector3(0f,m_TargetRigidbody.velocity.y-9.81f*Time.fixedDeltaTime,0f);
 
+        //Rotate the player.
+        if (m_TargetRigidbody.velocity.magnitude > 0f)
+        {
+            if (!GlobalData.EnemyLocked)
+            {
+                m_Target.forward = Vector3.SmoothDamp(m_Target.transform.forward, m_MovementDirection.normalized, ref m_TurnSpeed, m_TurnSmooth*Time.fixedDeltaTime);
+            }
+            else
+            {
+                m_Target.forward = Vector3.SmoothDamp(m_Target.transform.forward, m_VerticalDirection, ref m_TurnSpeed, m_TurnSmooth*Time.fixedDeltaTime);
+            }
+        }
+
+
+       
     }
        
 
