@@ -13,4 +13,11 @@ public static class GlobalData
     //Player stats
     public static Transform PlayerTransform;
 
+
+    //Function to release the enemy lock-on
+    public static void UnlockEnemy()
+    {
+        LockedEnemyTransform = null;
+        EnemyLocked = false;
+    }
 }
