@@ -203,9 +203,9 @@ public class CameraMovementScript : MonoBehaviour
     public void CenterCamera()
     {
 
-        m_AngleToRotate = -Vector3.Angle( -m_PlayerTransform.forward,m_CameraTranform.position - m_PlayerTransform.position) * Mathf.Sign(Vector3.Dot(m_PlayerTransform.up, Vector3.Cross(-m_PlayerTransform.forward,m_CameraTranform.position - m_PlayerTransform.position))); 
+        m_AngleToRotate = -Vector3.Angle( -m_PlayerTransform.forward,Vector3.Scale(m_CameraTranform.position - m_PlayerTransform.position, new Vector3(1f,0f,1f))) * Mathf.Sign(Vector3.Dot(m_PlayerTransform.up, Vector3.Cross(-m_PlayerTransform.forward,m_CameraTranform.position - m_PlayerTransform.position))); 
 
-        if (Mathf.Abs(m_AngleToRotate) > 15f)
+        if (Mathf.Abs(m_AngleToRotate) >= 15f)
         {
             m_CenterCameraTimer = 0;
             m_CenterCamera = true;

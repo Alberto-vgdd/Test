@@ -13,10 +13,8 @@ public class TODO
     //      Make the player turn around smoothly
 
     // CAMERA & LOCK-ON && PLAYER MOVEMENT SCRIPT
-    //      Make every script compatible with local axes.
+    //      Make every script compatible (Clean the code).
     //      Implement a better input system.
-    //      Clean the code.
-
 
     // OUTSIDE UNITY
     //      Look for a Photoshop alternative.
