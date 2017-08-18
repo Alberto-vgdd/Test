@@ -11,6 +11,8 @@ public class TODO
     // PLAYER MOVEMENT SCRIPT
     //      Make the player properly turn around when the stick is rapidly moved. 
     //      Make the player turn around smoothly
+    //      Problema cuando el jugador cambia de rampa
+
 
     // CAMERA & LOCK-ON && PLAYER MOVEMENT SCRIPT
     //      Make every script compatible (Clean the code).

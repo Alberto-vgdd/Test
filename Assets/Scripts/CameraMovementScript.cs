@@ -14,7 +14,7 @@ public class CameraMovementScript : MonoBehaviour
     //The distance between the Target and the Camera.
     public float m_CameraDistance;
     public float m_CameraOffsetDistance; //This variable avoids wall clipping.
-    private Vector3 m_CameraDistanceDefaultVector;
+
 
     //These two variables are used to calculate the camera "Spherical" position around the player.
     private Vector3 m_CameraDistanceVector;
@@ -27,13 +27,14 @@ public class CameraMovementScript : MonoBehaviour
     //The degrees per second the camera is going to turn.
     public float m_CameraRotationSpeed;
 
-    //This values limit the Y axis of the camera
+    //This values limit the Y rotation of the camera.
     public float m_MaxVerticalRotation;
     public float m_MinVerticalRotation;
+    private float m_CurrentVerticalRotation;
 
-    //Values that represents the amount of degrees in both Horizontal and Vertical axes
-    private float  m_HorizontalRotation;
-    private float m_VerticalRotation;
+    //Values that represents the amount of degrees to rotate in both Horizontal and Vertical axes
+    private float m_HorizontalRotationDifference;
+    private float m_VerticalRotationDifference;
 
 
     //Raycast to shorten m_CameraToPlayerDistance in case of obstacle
@@ -59,15 +60,16 @@ public class CameraMovementScript : MonoBehaviour
     private bool m_CenterCamera;
     private float m_CenterCameraTimer;
     public float m_CenterCameraMaxTime;
-    private float m_AngleToRotate;
+    private float m_AngleToRotateHorizontally;
+    private float m_AngleToRotateVertically;
 
     void Start ()
     {
         m_CameraTranform = transform;
-        m_CameraDistanceDefaultVector = new Vector3(0f, 0f, m_CameraDistance);
 
-        m_HorizontalRotation = 0f;
-        m_VerticalRotation = 15f;
+        m_CurrentVerticalRotation = 0f;
+        m_HorizontalRotationDifference = 0f;
+        m_VerticalRotationDifference = 0f;
 
         m_EnemyLocked = false;
         m_EnemyJustUnlocked = false;
@@ -98,14 +100,16 @@ public class CameraMovementScript : MonoBehaviour
         {
             if (m_CenterCamera)
             {
-                m_HorizontalRotation = (m_AngleToRotate / m_CenterCameraMaxTime) * Time.deltaTime;
+                m_HorizontalRotationDifference = (m_AngleToRotateHorizontally / m_CenterCameraMaxTime) * Time.deltaTime;
+                m_VerticalRotationDifference = (m_AngleToRotateVertically / m_CenterCameraMaxTime) * Time.deltaTime;
             }
             else
             {
-                m_HorizontalRotation = m_HorizontalInput * m_CameraRotationSpeed * Time.deltaTime;
+                m_HorizontalRotationDifference = m_HorizontalInput * m_CameraRotationSpeed * Time.deltaTime;
+                m_VerticalRotationDifference = m_VerticalInput * m_CameraRotationSpeed * Time.deltaTime;
             }
             
-            m_VerticalRotation = m_VerticalInput * m_CameraRotationSpeed * Time.deltaTime;
+
         }
 
     }
@@ -137,7 +141,7 @@ public class CameraMovementScript : MonoBehaviour
             }
             else
             {
-                m_CameraDistanceVector = -m_CameraDistanceDefaultVector;
+                m_CameraDistanceVector = -Vector3.forward * m_CameraDistance;
             }
         }
     }
@@ -149,6 +153,7 @@ public class CameraMovementScript : MonoBehaviour
         {
             m_CameraTranform.position = Vector3.SmoothDamp(m_CameraTranform.position, m_PlayerTransform.position + m_CameraDistanceVector , ref m_CameraSpeed, m_CameraLockSmooth * Time.deltaTime);
             m_CameraTarget = Vector3.SmoothDamp(m_CameraTarget, GlobalData.LockedEnemyTransform.position, ref m_CameraLookSpeed, m_CameraLockSmooth * Time.deltaTime);
+            //m_CameraTarget = (m_PlayerTransform.position + GlobalData.LockedEnemyTransform.position)/2  ;
             m_CameraTranform.LookAt(m_CameraTarget);
         }
         else
@@ -159,16 +164,18 @@ public class CameraMovementScript : MonoBehaviour
 
                 if (m_CenterCameraTimer >= m_CenterCameraMaxTime)
                 {
+                    m_CurrentVerticalRotation = 0f;
                     m_CenterCamera = false;
                 }
             }
-            if (((m_CameraTranform.position.y >= m_PlayerTransform.position.y + 2f) && m_VerticalRotation > 0) || ((m_CameraTranform.position.y <= m_PlayerTransform.position.y -1f) && m_VerticalRotation < 0))
+            if (((m_CurrentVerticalRotation >= m_MaxVerticalRotation) && m_VerticalRotationDifference > 0) || ((m_CurrentVerticalRotation<= m_MinVerticalRotation) && m_VerticalRotationDifference < 0) && !m_CenterCamera)
             {
-                m_CameraDistanceRotation = m_CameraTranform.rotation * Quaternion.Euler(0, m_HorizontalRotation, 0f);
+                m_CameraDistanceRotation = m_CameraTranform.rotation * Quaternion.Euler(0, m_HorizontalRotationDifference, 0f);
             }
             else
             {
-                m_CameraDistanceRotation = m_CameraTranform.rotation * Quaternion.Euler(m_VerticalRotation, m_HorizontalRotation, 0f);
+                m_CameraDistanceRotation = m_CameraTranform.rotation * Quaternion.Euler(m_VerticalRotationDifference, m_HorizontalRotationDifference, 0f);
+                m_CurrentVerticalRotation += m_VerticalRotationDifference; 
             }
 
                 
@@ -202,10 +209,11 @@ public class CameraMovementScript : MonoBehaviour
 
     public void CenterCamera()
     {
+        Vector3 auxCameraForward = Vector3.Scale(m_CameraTranform.forward, new Vector3(1f, 0f, 1f));
+        m_AngleToRotateHorizontally = -Vector3.Angle( m_PlayerTransform.forward,auxCameraForward) * Mathf.Sign(Vector3.Dot(m_PlayerTransform.up, Vector3.Cross(m_PlayerTransform.forward,auxCameraForward)));
+        m_AngleToRotateVertically = -Vector3.Angle(m_PlayerTransform.up, m_CameraTranform.up) * Mathf.Sign(Vector3.Dot(m_CameraTranform.right, Vector3.Cross(m_PlayerTransform.up, m_CameraTranform.up)));
 
-        m_AngleToRotate = -Vector3.Angle( -m_PlayerTransform.forward,Vector3.Scale(m_CameraTranform.position - m_PlayerTransform.position, new Vector3(1f,0f,1f))) * Mathf.Sign(Vector3.Dot(m_PlayerTransform.up, Vector3.Cross(-m_PlayerTransform.forward,m_CameraTranform.position - m_PlayerTransform.position))); 
-
-        if (Mathf.Abs(m_AngleToRotate) >= 15f)
+        if (Mathf.Abs(m_AngleToRotateHorizontally) >= 15f || Mathf.Abs( m_AngleToRotateVertically) >= 15f)
         {
             m_CenterCameraTimer = 0;
             m_CenterCamera = true;
