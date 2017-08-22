@@ -2,24 +2,19 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class CameraEnemyTracker : MonoBehaviour 
+public class CameraEnemyTrackerScript : MonoBehaviour 
 {
-    private CameraMovementScript m_CameraMovementScript;
+    [Header("Camera Movement Script")]
+    public CameraMovementScript m_CameraMovementScript;
 
     //Raycast to avoid locking enemies through walls
     private Ray m_EnemyToPlayerRay;
 
-
-    void Start()
-    {
-        m_CameraMovementScript = GetComponent<CameraMovementScript>();
-    }
-        
     void Awake()
     {
         GlobalData.LockableEnemies = new List<Transform>();
     }
-	
+
 	void LateUpdate () 
     {
         UpdateLockOn();
@@ -86,6 +81,10 @@ public class CameraEnemyTracker : MonoBehaviour
         {
             m_CameraMovementScript.LockOn();
             GlobalData.EnemyLocked = true;
+        }
+        else
+        {
+            m_CameraMovementScript.CenterCamera();
         }
     }
 

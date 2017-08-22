@@ -127,12 +127,13 @@ public class PlayerMovementScript : MonoBehaviour
         {
             if (!GlobalData.EnemyLocked)
             {
-                m_Target.forward = Vector3.SmoothDamp(m_Target.transform.forward, m_MovementDirection.normalized, ref m_TurnSpeed, m_TurnSmooth * Time.fixedDeltaTime);
+                m_Target.forward = Vector3.SmoothDamp(m_Target.forward, Vector3.Scale(m_TargetRigidbody.velocity,new Vector3(1,0,1)) , ref m_TurnSpeed, m_TurnSmooth * Time.fixedDeltaTime);
             }
             else
             {
-                m_Target.forward = Vector3.SmoothDamp(m_Target.transform.forward, m_VerticalDirection, ref m_TurnSpeed, m_TurnSmooth * Time.fixedDeltaTime);
+                m_Target.forward = Vector3.SmoothDamp(m_Target.forward, m_VerticalDirection, ref m_TurnSpeed, m_TurnSmooth * Time.fixedDeltaTime);
             }
+            
         }
 
         //Add gravity the player.
