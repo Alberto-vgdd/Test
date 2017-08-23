@@ -4,37 +4,38 @@ using UnityEngine;
 
 public class PlayerMovementScript : MonoBehaviour
 {
-    //Transforms to calculate the direction of the movement.
-    private Transform m_Camera;
-    private Transform m_Target;
+    // Transforms to calculate the direction of the movement.
+    [Header("Camera Transform")]
+    public Transform m_CameraTransform;
+    private Transform m_PlayerTransform;
 
-    //Input values.
+    // Input values.
     private float m_HorizontalInput;
     private float m_VerticalInput;
 
-
-    //Movement Axes for the player.
+    // Movement Axes for the player. M = V + H
     private Vector3 m_HorizontalDirection;
     private Vector3 m_VerticalDirection;
     private Vector3 m_MovementDirection;
 
-    //ref value which is used to smoothly turn around.
+    // Ref value used to smoothly turn around.
     private Vector3 m_TurnSpeed;
 
-    //values to create a smooth movement.
+    [Header("Movement Parameters")]
+    // Values to create a smooth movement.
     public float m_MovementSpeed;
     public float m_TurnSmooth;
-    private Rigidbody m_TargetRigidbody;
-    private Vector3 m_TargetCurrentVelocity;
+    private Rigidbody m_PlayerRigidbody;
+    private Vector3 m_PlayerCurrentVelocity;
 
     // A reference to the player's collider
-    private CapsuleCollider m_TargetCapsuleCollider;
+    private CapsuleCollider m_PlayerCapsuleCollider;
 
     // Variables used to check if the player is grounded.
-    private RaycastHit m_TargetToGroundRaycastHit;
-    public float m_TargetToFloorOffset;
-    public bool m_TargetGrounded;
-    public bool m_TargetSliding;
+    private RaycastHit m_PlayerToGroundRaycastHit;
+    public float m_PlayerToFloorOffset;
+    private bool m_PlayerGrounded;
+    private bool m_PlayerSliding;
 
     // Variables to manage the jump direction
     private Vector3 m_TargetPlaneDirection;
@@ -42,14 +43,11 @@ public class PlayerMovementScript : MonoBehaviour
 
 
     // Use this for initialization
-    void Start ()
+    void Awake ()
     {
-        m_Camera = Camera.main.transform;
-        m_Target = GameObject.Find("Player").transform;
-        GlobalData.PlayerTransform = m_Target;
-        m_TargetRigidbody = m_Target.GetComponent<Rigidbody>();
-        m_TargetCapsuleCollider = m_Target.GetComponent<CapsuleCollider>();
-
+        SystemAndData.PlayerTransform = m_PlayerTransform = transform;
+        m_PlayerRigidbody = m_PlayerTransform.GetComponent<Rigidbody>();
+        m_PlayerCapsuleCollider = m_PlayerTransform.GetComponent<CapsuleCollider>();
     }
 	
 	// Update is called once per frame
@@ -58,16 +56,16 @@ public class PlayerMovementScript : MonoBehaviour
         m_HorizontalInput = Input.GetAxis("Horizontal");
         m_VerticalInput = Input.GetAxis("Vertical");
 
-        if (!GlobalData.EnemyLocked)
+        if (!SystemAndData.EnemyLocked)
         {
-            m_HorizontalDirection = Vector3.Scale(m_Camera.right, new Vector3(1f, 0f, 1f)).normalized;
-            m_VerticalDirection = Vector3.Scale(m_Camera.forward, new Vector3(1f, 0f, 1f)).normalized;
+            m_HorizontalDirection = Vector3.Scale(m_CameraTransform.right, new Vector3(1f, 0f, 1f)).normalized;
+            m_VerticalDirection = Vector3.Scale(m_CameraTransform.forward, new Vector3(1f, 0f, 1f)).normalized;
         }
         else
         {
 
-            m_VerticalDirection = Vector3.Scale(GlobalData.LockedEnemyTransform.position - m_Target.position, new Vector3(1f, 0f, 1f)).normalized;
-            m_HorizontalDirection = Vector3.Cross(m_VerticalDirection, -m_Target.up).normalized;
+            m_VerticalDirection = Vector3.Scale(SystemAndData.LockedEnemyTransform.position - m_PlayerTransform.position, new Vector3(1f, 0f, 1f)).normalized;
+            m_HorizontalDirection = Vector3.Cross(m_VerticalDirection, -m_PlayerTransform.up).normalized;
         }
 
         m_MovementDirection = m_HorizontalDirection * m_HorizontalInput + m_VerticalDirection * m_VerticalInput;
@@ -77,67 +75,67 @@ public class PlayerMovementScript : MonoBehaviour
     {
 
         //Check if the player is grounded/sliding.
-        if (Physics.CapsuleCast(m_Target.position + m_TargetCapsuleCollider.center + Vector3.up *( m_TargetCapsuleCollider.height / 2 -m_TargetCapsuleCollider.radius), m_Target.position + m_TargetCapsuleCollider.center - Vector3.up *( m_TargetCapsuleCollider.height / 2 -m_TargetCapsuleCollider.radius), m_TargetCapsuleCollider.radius*0.95f, -m_Target.up, out m_TargetToGroundRaycastHit, 0.25f, (1 << LayerMask.NameToLayer("Environment"))))
+        if (Physics.CapsuleCast(m_PlayerTransform.position + m_PlayerCapsuleCollider.center + Vector3.up *( m_PlayerCapsuleCollider.height / 2 -m_PlayerCapsuleCollider.radius), m_PlayerTransform.position + m_PlayerCapsuleCollider.center - Vector3.up *( m_PlayerCapsuleCollider.height / 2 -m_PlayerCapsuleCollider.radius), m_PlayerCapsuleCollider.radius*0.95f, -m_PlayerTransform.up, out m_PlayerToGroundRaycastHit, 0.25f, (1 << LayerMask.NameToLayer("Environment"))))
         {
-            m_TargetGrounded = true;
-            m_TargetPlaneDirection = m_TargetToGroundRaycastHit.normal;
+            m_PlayerGrounded = true;
+            m_TargetPlaneDirection = m_PlayerToGroundRaycastHit.normal;
 
             if (Vector3.Angle(m_TargetPlaneDirection, Vector3.up) > 35f)
             {
-                m_TargetSliding = true;
+                m_PlayerSliding = true;
             }
             else
             {
-                m_TargetSliding = false;
+                m_PlayerSliding = false;
             }
 
             //This capsule cast is used to avoid the player to walk into slopes and start jittering when it is grounded.
-            if (Physics.CapsuleCast(m_Target.position + m_TargetCapsuleCollider.center + Vector3.up *( m_TargetCapsuleCollider.height / 2 -m_TargetCapsuleCollider.radius), m_Target.position + m_TargetCapsuleCollider.center - Vector3.up *( m_TargetCapsuleCollider.height / 2 -m_TargetCapsuleCollider.radius), m_TargetCapsuleCollider.radius*0.95f, m_MovementDirection, out m_TargetToGroundRaycastHit, m_MovementSpeed*Time.fixedDeltaTime, (1 << LayerMask.NameToLayer("Environment"))))
+            if (Physics.CapsuleCast(m_PlayerTransform.position + m_PlayerCapsuleCollider.center + Vector3.up *( m_PlayerCapsuleCollider.height / 2 -m_PlayerCapsuleCollider.radius), m_PlayerTransform.position + m_PlayerCapsuleCollider.center - Vector3.up *( m_PlayerCapsuleCollider.height / 2 -m_PlayerCapsuleCollider.radius), m_PlayerCapsuleCollider.radius*0.95f, m_MovementDirection, out m_PlayerToGroundRaycastHit, m_MovementSpeed*Time.fixedDeltaTime, (1 << LayerMask.NameToLayer("Environment"))))
             {
-                if (Vector3.Angle(m_TargetToGroundRaycastHit.normal, Vector3.up) > 35f)
+                if (Vector3.Angle(m_PlayerToGroundRaycastHit.normal, Vector3.up) > 35f)
                 {
-                    m_MovementDirection += Vector3.Scale(m_MovementDirection,Vector3.Scale(m_TargetToGroundRaycastHit.normal,new Vector3(1f,0f,1f))) * Mathf.Sign(Vector3.Dot(m_Target.forward,Vector3.forward));
+                    m_MovementDirection += Vector3.Scale(m_MovementDirection,Vector3.Scale(m_PlayerToGroundRaycastHit.normal,new Vector3(1f,0f,1f))) * Mathf.Sign(Vector3.Dot(m_PlayerTransform.forward,Vector3.forward));
                 }
             }
         }
         else
         {
-            m_TargetGrounded = false;
-            m_TargetSliding = false;
+            m_PlayerGrounded = false;
+            m_PlayerSliding = false;
             m_TargetPlaneDirection = Vector3.up;
         }   
 
 
         //Move the player
-        m_TargetRigidbody.velocity = m_MovementDirection * m_MovementSpeed +  Vector3.up*m_TargetRigidbody.velocity.y;
+        m_PlayerRigidbody.velocity = m_MovementDirection * m_MovementSpeed +  Vector3.up*m_PlayerRigidbody.velocity.y;
 
         //If the player is on a steep, adjust the movement direction. If it is on a slope, it should fall.
         if (m_TargetPlaneDirection != Vector3.up)
         {
-            m_TargetRigidbody.velocity = Vector3.ProjectOnPlane(m_TargetRigidbody.velocity, m_TargetPlaneDirection);
+            m_PlayerRigidbody.velocity = Vector3.ProjectOnPlane(m_PlayerRigidbody.velocity, m_TargetPlaneDirection);
 
-            if (m_TargetSliding)
+            if (m_PlayerSliding)
             {
-                m_TargetRigidbody.velocity = new Vector3(m_TargetRigidbody.velocity.x, Mathf.Min(m_TargetRigidbody.velocity.y, -m_MovementSpeed), m_TargetRigidbody.velocity.z);
+                m_PlayerRigidbody.velocity = new Vector3(m_PlayerRigidbody.velocity.x, Mathf.Min(m_PlayerRigidbody.velocity.y, -m_MovementSpeed), m_PlayerRigidbody.velocity.z);
             }  
         }
     	
         //Rotate the player.
-        if (m_TargetRigidbody.velocity.magnitude > 0f)
+        if (m_PlayerRigidbody.velocity.magnitude > 0f)
         {
-            if (!GlobalData.EnemyLocked)
+            if (!SystemAndData.EnemyLocked)
             {
-                m_Target.forward = Vector3.SmoothDamp(m_Target.forward, Vector3.Scale(m_TargetRigidbody.velocity,new Vector3(1,0,1)) , ref m_TurnSpeed, m_TurnSmooth * Time.fixedDeltaTime);
+                m_PlayerTransform.forward = Vector3.SmoothDamp(m_PlayerTransform.forward, Vector3.Scale(m_PlayerRigidbody.velocity,new Vector3(1,0,1)) , ref m_TurnSpeed, m_TurnSmooth * Time.fixedDeltaTime);
             }
             else
             {
-                m_Target.forward = Vector3.SmoothDamp(m_Target.forward, m_VerticalDirection, ref m_TurnSpeed, m_TurnSmooth * Time.fixedDeltaTime);
+                m_PlayerTransform.forward = Vector3.SmoothDamp(m_PlayerTransform.forward, m_VerticalDirection, ref m_TurnSpeed, m_TurnSmooth * Time.fixedDeltaTime);
             }
             
         }
 
         //Add gravity the player.
-        m_TargetRigidbody.AddForce(Physics.gravity*2f,ForceMode.Acceleration);
+        m_PlayerRigidbody.AddForce(Physics.gravity*2f,ForceMode.Acceleration);
 
     }
 }

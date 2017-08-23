@@ -33,38 +33,44 @@ public class CameraMovementScript : MonoBehaviour
 	private Transform m_CameraVerticalPivot;
 
 	// Controller Inputs
-	float m_HorizontalInput;
-	float m_VerticalInput;
+	private float m_HorizontalInput;
+	private float m_VerticalInput;
 
 	// Values used to smoothly rotate the camera.
-	float m_HorizontalIncrement;
-	float m_VerticalIncrement;
-	float m_HorizontalSmoothVelocity;
-	float m_VerticalSmoothVelocity;
+	private float m_HorizontalIncrement;
+	private float m_VerticalIncrement;
+	private float m_HorizontalSmoothVelocity;
+	private float m_VerticalSmoothVelocity;
 
 	// Camera's transforms current angle rotation.
-	float m_VerticalAngle;
-	float m_HorizontalAngle;
+	private float m_VerticalAngle;
+	private float m_HorizontalAngle;
 
 	// Variables used to lock an enemy
-	bool m_EnemyLockedOn;
-	Vector3 m_CameraToEnemy;
+	private bool m_EnemyLockedOn;
+	private Vector3 m_CameraToEnemy;
+	private bool m_CameraLockOnAxisInUse;
 
 	// Variables to center the camera
-	bool m_CenterCamera;
-	float m_PlayerHorizontalAngle;
+	private bool m_CenterCamera;
+	private float m_PlayerHorizontalAngle;
 
-	// Variables to avoid wall clipping.
-	Ray m_TargeToCameraRay;
-	RaycastHit m_AvoidClippingRaycastHit;
+	// Variables to avoid wall clipping. (Unity warning disabled)
+	#pragma warning disable 649
+	private Ray m_TargetToCameraRay;
+	private RaycastHit m_AvoidClippingRaycastHit;
+
 
 	void Awake () 
 	{
-		//Set the camera's transforms
+		// Reference to GlobalData
+		SystemAndData.m_CameraMovementScript = this;
+
+		// Set the camera's transforms
 		m_CameraVerticalPivot = m_CameraTransform.parent;
 		m_CameraHorizontalPivot = this.transform;
 		
-		//Place the camera in the desired position
+		// Place the camera in the desired position
 		m_CameraHorizontalPivot.position = m_PlayerTransform.position;
 		m_CameraVerticalPivot.localPosition += Vector3.up*m_CameraHeight;
 		m_CameraTransform.localPosition -= Vector3.forward*m_CameraDistance;
@@ -80,36 +86,39 @@ public class CameraMovementScript : MonoBehaviour
 
 	void RotateAroundPlayer()
 	{
-		m_HorizontalInput = Input.GetAxis("CameraHorizontal"); m_HorizontalInput *= (m_InvertHorizontalInput)? -1:1;
-		m_VerticalInput = Input.GetAxis("CameraVertical");m_VerticalInput *= (m_InvertVerticalInput)? -1:1;
 
-		m_HorizontalIncrement = Mathf.SmoothDamp(m_HorizontalIncrement,m_HorizontalInput,ref m_HorizontalSmoothVelocity, m_CameraSmoothMultiplier*Time.deltaTime);
-		m_VerticalIncrement = Mathf.SmoothDamp(m_VerticalIncrement,m_VerticalInput,ref m_VerticalSmoothVelocity, m_CameraSmoothMultiplier*Time.deltaTime);
-
-		m_HorizontalAngle += m_HorizontalIncrement*m_CameraSpeedMultiplier;
-		m_VerticalAngle += m_VerticalIncrement*m_CameraSpeedMultiplier;
-		m_VerticalAngle = Mathf.Clamp(m_VerticalAngle,m_MinimumVerticalAngle,m_MaximunmVerticalAngle);
-		
 		if (m_EnemyLockedOn)
 		{
-			// Create a enemy to camera Vec3 with no height displacement. If the vector is 0, use the camera forward to avoid Quaternion problems.
-			m_CameraToEnemy = GlobalData.LockedEnemyTransform.position - m_CameraHorizontalPivot.position; m_CameraToEnemy.y = 0;
+			
+			m_HorizontalInput = Input.GetAxis("CameraHorizontal"); 
+			m_VerticalInput = Input.GetAxis("CameraVertical");m_VerticalInput *= (m_InvertVerticalInput)? -1:1;
+
+			// If horizontal input is recieved, the lock on will be moved to another enemy.
+			ChangeLockOn();
+			
+			// Manage Horizontal camera movement: Create a enemy to camera Vec3 with no height displacement. If the vector is 0, use the camera forward to avoid Quaternion problems.
+			m_CameraToEnemy = SystemAndData.LockedEnemyTransform.position - m_CameraHorizontalPivot.position; m_CameraToEnemy.y = 0;
 			if (m_CameraToEnemy == Vector3.zero) { m_CameraToEnemy = m_CameraHorizontalPivot.forward;}
+
+			// Manage Vertical camera movement
+			m_VerticalIncrement = Mathf.SmoothDamp(m_VerticalIncrement,m_VerticalInput,ref m_VerticalSmoothVelocity, m_CameraSmoothMultiplier*Time.deltaTime);
+			
+			m_HorizontalAngle = m_CameraHorizontalPivot.eulerAngles.y;
+			m_VerticalAngle += m_VerticalIncrement*m_CameraSpeedMultiplier;
+			m_VerticalAngle = Mathf.Clamp(m_VerticalAngle,m_MinimumVerticalAngle,m_MaximunmVerticalAngle);
 
 			m_CameraHorizontalPivot.rotation = Quaternion.Slerp(m_CameraHorizontalPivot.rotation, Quaternion.LookRotation(m_CameraToEnemy),m_TargetCameraSpeedMultipier*Time.deltaTime);
 			m_CameraVerticalPivot.localRotation = Quaternion.Euler(m_VerticalAngle,0,0);
 
-			m_HorizontalAngle = m_CameraHorizontalPivot.eulerAngles.y;
+			
 		}
 		else if (m_CenterCamera)
 		{
 			m_CameraHorizontalPivot.rotation = Quaternion.Slerp(m_CameraHorizontalPivot.rotation,Quaternion.Euler(0,m_PlayerHorizontalAngle,0),m_TargetCameraSpeedMultipier*Time.deltaTime);
 			m_CameraVerticalPivot.localRotation = Quaternion.Slerp(m_CameraVerticalPivot.localRotation,Quaternion.Euler(0,0,0), m_TargetCameraSpeedMultipier*Time.deltaTime);
 			
-			
 			m_HorizontalAngle = m_CameraHorizontalPivot.eulerAngles.y;
 			m_VerticalAngle = m_CameraVerticalPivot.localEulerAngles.x;
-
 
 			if (Mathf.Abs(m_PlayerHorizontalAngle-m_HorizontalAngle) < 1f && Mathf.Abs(m_VerticalAngle) < 1f)
 			{
@@ -118,6 +127,16 @@ public class CameraMovementScript : MonoBehaviour
 		}
 		else
 		{
+			m_HorizontalInput = Input.GetAxis("CameraHorizontal"); m_HorizontalInput *= (m_InvertHorizontalInput)? -1:1;
+			m_VerticalInput = Input.GetAxis("CameraVertical");m_VerticalInput *= (m_InvertVerticalInput)? -1:1;
+
+			m_HorizontalIncrement = Mathf.SmoothDamp(m_HorizontalIncrement,m_HorizontalInput,ref m_HorizontalSmoothVelocity, m_CameraSmoothMultiplier*Time.deltaTime);
+			m_VerticalIncrement = Mathf.SmoothDamp(m_VerticalIncrement,m_VerticalInput,ref m_VerticalSmoothVelocity, m_CameraSmoothMultiplier*Time.deltaTime);
+
+			m_HorizontalAngle += m_HorizontalIncrement*m_CameraSpeedMultiplier;
+			m_VerticalAngle += m_VerticalIncrement*m_CameraSpeedMultiplier;
+			m_VerticalAngle = Mathf.Clamp(m_VerticalAngle,m_MinimumVerticalAngle,m_MaximunmVerticalAngle);
+
 			m_CameraHorizontalPivot.rotation = Quaternion.Euler(0,m_HorizontalAngle,0);	
 			m_CameraVerticalPivot.localRotation = Quaternion.Euler(m_VerticalAngle,0,0);
 		}
@@ -140,13 +159,26 @@ public class CameraMovementScript : MonoBehaviour
 		m_PlayerHorizontalAngle = m_PlayerTransform.eulerAngles.y;
 		
 	}
+	
+	void ChangeLockOn()
+	{
+		if( Mathf.Abs(m_HorizontalInput) > 0.4f && !m_CameraLockOnAxisInUse)
+		{
+			SystemAndData.ChangeLockOn(m_HorizontalInput);
+			m_CameraLockOnAxisInUse = true;
+		}
+		if( Mathf.Abs(m_HorizontalInput) <= 0.4f)
+		{
+			m_CameraLockOnAxisInUse = false;
+		}
+	}
 
 	void AvoidClipping()
 	{
-		m_TargeToCameraRay.origin = m_CameraHorizontalPivot.position + m_CameraVerticalPivot.localPosition;
-		m_TargeToCameraRay.direction = m_CameraTransform.position-m_TargeToCameraRay.origin;
+		m_TargetToCameraRay.origin = m_CameraHorizontalPivot.position + m_CameraVerticalPivot.localPosition;
+		m_TargetToCameraRay.direction = m_CameraTransform.position-m_TargetToCameraRay.origin;
 
-		if (Physics.SphereCast(m_TargeToCameraRay,m_CameraClippingOffset, out m_AvoidClippingRaycastHit, m_CameraDistance, (1 << LayerMask.NameToLayer("Environment"))))
+		if (Physics.SphereCast(m_TargetToCameraRay,m_CameraClippingOffset, out m_AvoidClippingRaycastHit, m_CameraDistance, (1 << LayerMask.NameToLayer("Environment"))))
 		{
 			m_CameraTransform.localPosition = -Vector3.forward*(m_AvoidClippingRaycastHit.distance-m_CameraClippingOffset);
 		}
@@ -156,4 +188,5 @@ public class CameraMovementScript : MonoBehaviour
 		}
 
 	}
+
 }

@@ -4,15 +4,14 @@ using UnityEngine;
 
 public class CameraEnemyTrackerScript : MonoBehaviour 
 {
-    [Header("Camera Movement Script")]
-    public CameraMovementScript m_CameraMovementScript;
-
-    //Raycast to avoid locking enemies through walls
-    private Ray m_EnemyToPlayerRay;
-
     void Awake()
     {
-        GlobalData.LockableEnemies = new List<Transform>();
+        // Reference to GlobalData 
+        SystemAndData.m_CameraEnemyTrackerScript = this;
+        SystemAndData.m_PlayerCamera = GetComponent<Camera>();
+        
+        // Clear the enemy array.
+        SystemAndData.LockableEnemies = new List<Transform>();
     }
 
 	void LateUpdate () 
@@ -24,96 +23,49 @@ public class CameraEnemyTrackerScript : MonoBehaviour
     {
         if (Input.GetButtonDown("Right Thumb"))
         {
-            if (GlobalData.EnemyLocked)
+            if (SystemAndData.EnemyLocked)
             {
-                m_CameraMovementScript.LockOn();
-                GlobalData.UnlockEnemy();
+                SystemAndData.UnlockEnemy();
+                
             }
             else
             {
-                if (NumberOfEnemies() != 0)
-                {
-                    LockClosestEnemy();
-                }
-                else
-                {
-                    m_CameraMovementScript.CenterCamera();
-                }
+                SystemAndData.LockEnemy();
             }
         }
 
-        if (GlobalData.EnemyLocked && NumberOfEnemies() == 0)
+        if (SystemAndData.EnemyLocked && NumberOfEnemies() == 0)
         {
-            m_CameraMovementScript.LockOn();
-            GlobalData.UnlockEnemy();
+            SystemAndData.UnlockEnemy();
         }
-        else if (GlobalData.EnemyLocked && !ContainsEnemy(GlobalData.LockedEnemyTransform))
+        else if (SystemAndData.EnemyLocked && !ContainsEnemy(SystemAndData.LockedEnemyTransform))
         {
-            m_CameraMovementScript.LockOn();
-            GlobalData.UnlockEnemy();
+            SystemAndData.UnlockEnemy();
         }
+
         //else if the enemy is behind a wall for more than 2 secs.
     }
 
 
-    void LockClosestEnemy()
-    {
-        float closestDistance = float.MaxValue;
-        float enemyDistance;
-
-        foreach (Transform enemy in GlobalData.LockableEnemies)
-        {
-            enemyDistance = Vector3.Distance(GlobalData.PlayerTransform.position,enemy.position);
-            if (closestDistance > enemyDistance)
-            {
-                m_EnemyToPlayerRay.origin = enemy.position;
-                m_EnemyToPlayerRay.direction = GlobalData.PlayerTransform.position - enemy.position;
-
-                if (!Physics.Raycast(m_EnemyToPlayerRay, Vector3.Distance(GlobalData.PlayerTransform.position,enemy.position), (1 << LayerMask.NameToLayer("Environment"))))
-                {
-                    closestDistance = enemyDistance;
-                    GlobalData.LockedEnemyTransform = enemy;
-                }
-            }
-        }
-
-        if (GlobalData.LockedEnemyTransform != null)
-        {
-            m_CameraMovementScript.LockOn();
-            GlobalData.EnemyLocked = true;
-        }
-        else
-        {
-            m_CameraMovementScript.CenterCamera();
-        }
-    }
-
-
-
-
-
-
-
     void AddEnemy(Transform enemy)
     {
-        GlobalData.LockableEnemies.Add(enemy);
+        SystemAndData.LockableEnemies.Add(enemy);
     }
 
     void RemoveEnemy(Transform enemy)
     {
-        GlobalData.LockableEnemies.Remove(enemy);
+        SystemAndData.LockableEnemies.Remove(enemy);
     }
 
     bool ContainsEnemy(Transform enemy)
     {
-        return GlobalData.LockableEnemies.Contains(enemy);
+        return SystemAndData.LockableEnemies.Contains(enemy);
     }
 
     int NumberOfEnemies()
     {
-        return GlobalData.LockableEnemies.Count;
+        return SystemAndData.LockableEnemies.Count;
     }
-
 
 
 
