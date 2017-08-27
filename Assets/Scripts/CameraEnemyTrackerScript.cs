@@ -4,91 +4,158 @@ using UnityEngine;
 
 public class CameraEnemyTrackerScript : MonoBehaviour 
 {
+    // Variables to Lock Enemies
+    private static List<Transform> m_LockableEnemies;
+    private Collider[] m_NearbyEnemyColliders;
+    private bool m_EnemyLocked;
+
+    // This Camera, used to switch between targets.
+    private Camera m_PlayerCamera;
+
+    [Header("Player Transform")]
+    public Transform m_PlayerTransform;
+
+    [Header("Maximum Lock Distance")]
+    public float m_MaximumLockDistance;
+    
+
     void Awake()
     {
         // Reference to GlobalData 
-        SystemAndData.m_CameraEnemyTrackerScript = this;
-        SystemAndData.m_PlayerCamera = GetComponent<Camera>();
+        SystemAndData.CameraEnemyTrackerScript = this;
+        SystemAndData.PlayerCamera = m_PlayerCamera = GetComponent<Camera>();
         
         // Clear the enemy array.
-        SystemAndData.LockableEnemies = new List<Transform>();
+        m_LockableEnemies = new List<Transform>();
     }
 
 	void LateUpdate () 
     {
         UpdateLockOn();
 	}
+
+    void FixedUpdate()
+    {
+        if (SystemAndData.IsEnemyLocked)
+        {
+            RefreshNearEnemies();
+        } 
+    }
         
     void UpdateLockOn()
     {
         if (Input.GetButtonDown("Right Thumb"))
         {
-            if (SystemAndData.EnemyLocked)
+            if (SystemAndData.IsEnemyLocked)
             {
-                SystemAndData.UnlockEnemy();
+                UnlockEnemy();
                 
             }
             else
             {
-                SystemAndData.LockEnemy();
+                RefreshNearEnemies();
+                LockEnemy();
             }
         }
 
-        if (SystemAndData.EnemyLocked && NumberOfEnemies() == 0)
+        if (SystemAndData.IsEnemyLocked && m_LockableEnemies.Count == 0)
         {
-            SystemAndData.UnlockEnemy();
+            UnlockEnemy();
         }
-        else if (SystemAndData.EnemyLocked && !ContainsEnemy(SystemAndData.LockedEnemyTransform))
+        else if (SystemAndData.IsEnemyLocked && !m_LockableEnemies.Contains(SystemAndData.LockedEnemyTransform))
         {
-            SystemAndData.UnlockEnemy();
+            UnlockEnemy();
         }
 
         //else if the enemy is behind a wall for more than 2 secs.
     }
 
-
-    void AddEnemy(Transform enemy)
+    // This code realeses the enemey locked on.
+    void UnlockEnemy()
     {
-        SystemAndData.LockableEnemies.Add(enemy);
+        SystemAndData.LockedEnemyTransform = null;
+        SystemAndData.IsEnemyLocked = false;
     }
 
-    void RemoveEnemy(Transform enemy)
+    // Function that locks on the closest enemy available. If there are no enemies available, just center the camera.
+    void LockEnemy()
     {
-        SystemAndData.LockableEnemies.Remove(enemy);
+        if (m_LockableEnemies.Count != 0)
+        {
+            float closestDistance = float.MaxValue;
+            float enemyDistance;
+
+            foreach (Transform enemy in m_LockableEnemies)
+            {
+                enemyDistance = Vector3.Distance(m_PlayerTransform.position,enemy.position);
+                if (closestDistance > enemyDistance)
+                {
+                    if (!Physics.Raycast(enemy.position,m_PlayerTransform.position - enemy.position , Vector3.Distance(SystemAndData.PlayerTransform.position,enemy.position), (1 << LayerMask.NameToLayer("Environment"))))
+                    {
+                        closestDistance = enemyDistance;
+                        SystemAndData.LockedEnemyTransform = enemy;
+                    }
+                }
+            }
+
+            if (SystemAndData.LockedEnemyTransform != null)
+            {
+                SystemAndData.IsEnemyLocked = true;
+            }
+            else
+            {
+                SystemAndData.CenterCamera();
+            }
+        }
+        else
+        {
+            SystemAndData.CenterCamera();
+        }
     }
 
-    bool ContainsEnemy(Transform enemy)
+    // This function updates the lockable enemeies by casting a sphere.
+    void RefreshNearEnemies()
     {
-        return SystemAndData.LockableEnemies.Contains(enemy);
+        m_LockableEnemies = new List<Transform>();
+        m_NearbyEnemyColliders =  Physics.OverlapSphere(SystemAndData.PlayerTransform.position,m_MaximumLockDistance,(1 << LayerMask.NameToLayer("Enemies")));
+       
+        foreach(Collider enemyCollider in m_NearbyEnemyColliders)
+        {
+             m_LockableEnemies.Add(enemyCollider.transform);
+        }
     }
 
-    int NumberOfEnemies()
+
+    // Move to the closest enemy on the screen (given the direction)
+    public void ChangeLockOn(float input)
     {
-        return SystemAndData.LockableEnemies.Count;
-    }
-
-
-
-
-
+        Transform newLockedEnemy = SystemAndData.LockedEnemyTransform;
+        float DistanceToPreviousEnemy = 999*Mathf.Sign(input);
         
-    void OnTriggerEnter(Collider collider)
-    {
-        if (collider.CompareTag("Enemy"))
+        if (Mathf.Sign(input) > 0)
         {
-            AddEnemy(collider.transform);
+            foreach(Transform enemy in m_LockableEnemies)
+            {
+                if (m_PlayerCamera.WorldToViewportPoint(SystemAndData.LockedEnemyTransform.position).x < m_PlayerCamera.WorldToViewportPoint(enemy.position).x && m_PlayerCamera.WorldToViewportPoint(enemy.position).x < DistanceToPreviousEnemy )
+                {
+                    newLockedEnemy = enemy;
+                    DistanceToPreviousEnemy = m_PlayerCamera.WorldToViewportPoint(enemy.position).x;
+                }
+            }
+        }
+        else if (Mathf.Sign(input) < 0)
+        {
+            foreach(Transform enemy in m_LockableEnemies)
+            {
+                if (m_PlayerCamera.WorldToViewportPoint(SystemAndData.LockedEnemyTransform.position).x > m_PlayerCamera.WorldToViewportPoint(enemy.position).x && m_PlayerCamera.WorldToViewportPoint(enemy.position).x > DistanceToPreviousEnemy )
+                {
+                    newLockedEnemy = enemy;
+                    DistanceToPreviousEnemy = m_PlayerCamera.WorldToViewportPoint(enemy.position).x;
+                }
+            }
         }
 
+        SystemAndData.LockedEnemyTransform = newLockedEnemy;
     }
-
-    void OnTriggerExit(Collider collider)
-    {
-        if (collider.CompareTag("Enemy") && ContainsEnemy(collider.transform) )
-        {
-            RemoveEnemy(collider.transform);
-        }
-
-    }
-
 
 }

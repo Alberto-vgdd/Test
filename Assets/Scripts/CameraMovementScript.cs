@@ -64,7 +64,7 @@ public class CameraMovementScript : MonoBehaviour
 	void Awake () 
 	{
 		// Reference to GlobalData
-		SystemAndData.m_CameraMovementScript = this;
+		SystemAndData.CameraMovementScript = this;
 
 		// Set the camera's transforms
 		m_CameraVerticalPivot = m_CameraTransform.parent;
@@ -87,7 +87,7 @@ public class CameraMovementScript : MonoBehaviour
 	void RotateAroundPlayer()
 	{
 
-		if (m_EnemyLockedOn)
+		if (SystemAndData.IsEnemyLocked)
 		{
 			
 			m_HorizontalInput = Input.GetAxis("CameraHorizontal"); 
@@ -137,7 +137,7 @@ public class CameraMovementScript : MonoBehaviour
 			m_VerticalAngle += m_VerticalIncrement*m_CameraSpeedMultiplier;
 			m_VerticalAngle = Mathf.Clamp(m_VerticalAngle,m_MinimumVerticalAngle,m_MaximunmVerticalAngle);
 
-			m_CameraHorizontalPivot.rotation = Quaternion.Euler(0,m_HorizontalAngle,0);	
+			m_CameraHorizontalPivot.rotation =  Quaternion.Euler(0,m_HorizontalAngle,0);	
 			m_CameraVerticalPivot.localRotation = Quaternion.Euler(m_VerticalAngle,0,0);
 		}
 		
@@ -146,11 +146,6 @@ public class CameraMovementScript : MonoBehaviour
 	void FollowPlayer()
 	{
 		m_CameraHorizontalPivot.position = Vector3.Lerp(m_CameraHorizontalPivot.position,m_PlayerTransform.position,m_CameraFollowSpeedMultiplier*Time.deltaTime);
-	}
-
-	public void LockOn()
-	{
-		m_EnemyLockedOn = !m_EnemyLockedOn;
 	}
 
 	public void CenterCamera()

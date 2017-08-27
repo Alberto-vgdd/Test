@@ -56,7 +56,7 @@ public class PlayerMovementScript : MonoBehaviour
         m_HorizontalInput = Input.GetAxis("Horizontal");
         m_VerticalInput = Input.GetAxis("Vertical");
 
-        if (!SystemAndData.EnemyLocked)
+        if (!SystemAndData.IsEnemyLocked)
         {
             m_HorizontalDirection = Vector3.Scale(m_CameraTransform.right, new Vector3(1f, 0f, 1f)).normalized;
             m_VerticalDirection = Vector3.Scale(m_CameraTransform.forward, new Vector3(1f, 0f, 1f)).normalized;
@@ -123,7 +123,7 @@ public class PlayerMovementScript : MonoBehaviour
         //Rotate the player.
         if (m_PlayerRigidbody.velocity.magnitude > 0f)
         {
-            if (!SystemAndData.EnemyLocked)
+            if (!SystemAndData.IsEnemyLocked)
             {
                 m_PlayerTransform.forward = Vector3.SmoothDamp(m_PlayerTransform.forward, Vector3.Scale(m_PlayerRigidbody.velocity,new Vector3(1,0,1)) , ref m_TurnSpeed, m_TurnSmooth * Time.fixedDeltaTime);
             }
