@@ -15,8 +15,10 @@ public class CameraEnemyTrackerScript : MonoBehaviour
     [Header("Player Transform")]
     public Transform m_PlayerTransform;
 
-    [Header("Maximum Lock Distance")]
+    [Header("Lock On Parameters")]
     public float m_MaximumLockDistance;
+    public float m_FixedStepMultiplier;
+    private float m_TimeSinceLastRefresh;
     
 
     void Awake()
@@ -38,7 +40,13 @@ public class CameraEnemyTrackerScript : MonoBehaviour
     {
         if (SystemAndData.IsEnemyLocked)
         {
-            RefreshNearEnemies();
+            m_TimeSinceLastRefresh += Time.fixedDeltaTime;
+            if (m_TimeSinceLastRefresh >= m_FixedStepMultiplier*Time.fixedDeltaTime)
+            {
+                RefreshNearEnemies();
+                m_TimeSinceLastRefresh = 0;
+            }
+            
         } 
     }
         
