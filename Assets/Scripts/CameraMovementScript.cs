@@ -24,6 +24,12 @@ public class CameraMovementScript : MonoBehaviour
 	public bool m_InvertHorizontalInput;
 	public bool m_InvertVerticalInput;
 
+	[Header("Camera Auto Rotation Parameters")]
+	public float m_CameraAutoRotateMultiplier; //2 is slow, 3 and 4 seem fine
+	public bool m_CameraAutoRotation;
+	private Camera m_Camera;
+	private float m_PlayerXInViewport;
+
 	[Header("Clipping Parameters")]
 	public float m_CameraClippingOffset;
 
@@ -61,6 +67,10 @@ public class CameraMovementScript : MonoBehaviour
 	private RaycastHit m_AvoidClippingRaycastHit;
 
 
+
+
+
+
 	void Awake () 
 	{
 		// Reference to GlobalData
@@ -74,6 +84,9 @@ public class CameraMovementScript : MonoBehaviour
 		m_CameraHorizontalPivot.position = m_PlayerTransform.position;
 		m_CameraVerticalPivot.localPosition += Vector3.up*m_CameraHeight;
 		m_CameraTransform.localPosition -= Vector3.forward*m_CameraDistance;
+
+		// Get the camera.
+		m_Camera = m_CameraTransform.GetComponent<Camera>();
 	}
 	
 	void LateUpdate () 
@@ -130,6 +143,17 @@ public class CameraMovementScript : MonoBehaviour
 			m_HorizontalInput = Input.GetAxis("CameraHorizontal"); m_HorizontalInput *= (m_InvertHorizontalInput)? -1:1;
 			m_VerticalInput = Input.GetAxis("CameraVertical");m_VerticalInput *= (m_InvertVerticalInput)? -1:1;
 
+			// If the user isn't moving the camera while the player is moving, auto rotate the camera.
+			if (m_HorizontalInput ==  0 && m_CameraAutoRotation)
+			{
+				m_PlayerXInViewport = m_Camera.WorldToViewportPoint(m_PlayerTransform.position).x;
+
+				if ( m_PlayerXInViewport != 0.5f )
+				{
+						m_HorizontalInput = (m_PlayerXInViewport - 0.5f)*m_CameraAutoRotateMultiplier;
+				}
+			}
+			
 			m_HorizontalIncrement = Mathf.SmoothDamp(m_HorizontalIncrement,m_HorizontalInput,ref m_HorizontalSmoothVelocity, m_CameraSmoothMultiplier*Time.deltaTime);
 			m_VerticalIncrement = Mathf.SmoothDamp(m_VerticalIncrement,m_VerticalInput,ref m_VerticalSmoothVelocity, m_CameraSmoothMultiplier*Time.deltaTime);
 
@@ -139,6 +163,9 @@ public class CameraMovementScript : MonoBehaviour
 
 			m_CameraHorizontalPivot.rotation =  Quaternion.Euler(0,m_HorizontalAngle,0);	
 			m_CameraVerticalPivot.localRotation = Quaternion.Euler(m_VerticalAngle,0,0);
+			
+
+			
 		}
 		
 	}
