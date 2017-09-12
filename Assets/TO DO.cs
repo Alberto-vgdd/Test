@@ -6,6 +6,7 @@ public class TODO
 {
     // CAMERA & LOCK-ON
     //     5  Release lock-on if the enemy stays 2 secs behind a wall.
+    //     It looks like the camera movement behaves differently due to FPS 
 
     // PLAYER MOVEMENT SCRIPT
     //     1 Make the player turn around smoothly and properly

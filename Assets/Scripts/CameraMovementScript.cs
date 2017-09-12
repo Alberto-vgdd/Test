@@ -144,7 +144,7 @@ public class CameraMovementScript : MonoBehaviour
 			m_VerticalInput = Input.GetAxis("CameraVertical");m_VerticalInput *= (m_InvertVerticalInput)? -1:1;
 
 			// If the user isn't moving the camera while the player is moving, auto rotate the camera.
-			if (m_HorizontalInput ==  0 && m_CameraAutoRotation)
+            if (m_HorizontalInput ==  0 && m_CameraAutoRotation)
 			{
 				m_PlayerXInViewport = m_Camera.WorldToViewportPoint(m_PlayerTransform.position).x;
 
