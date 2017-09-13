@@ -9,6 +9,7 @@ public class TODO
 
     // PLAYER MOVEMENT SCRIPT
     //     1 Make the player turn around smoothly and properly
+    //      Player should not slide on ramps
 
 
     //  PLAYER MOVEMENT SCRIPT
