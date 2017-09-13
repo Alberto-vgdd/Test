@@ -19,8 +19,9 @@ public class CameraMovementScript : MonoBehaviour
 	[Header("Camera Movement Parameters")]
 	public float m_CameraFollowSpeedMultiplier;
 	public float m_CameraSmoothMultiplier;
-	public float m_CameraSpeedMultiplier;
-	public float m_TargetCameraSpeedMultipier;
+	public float m_CameraDegreesPerSecond;
+	public float m_ResetCameraSpeedMultipier;
+	public float m_LockOnSpeedMultipier;
 	public bool m_InvertHorizontalInput;
 	public bool m_InvertVerticalInput;
 
@@ -87,6 +88,7 @@ public class CameraMovementScript : MonoBehaviour
 
 		// Get the camera.
 		m_Camera = m_CameraTransform.GetComponent<Camera>();
+
 	}
 	
 	void LateUpdate () 
@@ -114,21 +116,21 @@ public class CameraMovementScript : MonoBehaviour
 			if (m_CameraToEnemy == Vector3.zero) { m_CameraToEnemy = m_CameraHorizontalPivot.forward;}
 
 			// Manage Vertical camera movement
-			m_VerticalIncrement = Mathf.SmoothDamp(m_VerticalIncrement,m_VerticalInput,ref m_VerticalSmoothVelocity, m_CameraSmoothMultiplier*Time.deltaTime);
+			m_VerticalIncrement = Mathf.SmoothDamp(m_VerticalIncrement,m_VerticalInput,ref m_VerticalSmoothVelocity, m_CameraSmoothMultiplier);
 			
 			m_HorizontalAngle = m_CameraHorizontalPivot.eulerAngles.y;
-			m_VerticalAngle += m_VerticalIncrement*m_CameraSpeedMultiplier;
+			m_VerticalAngle += m_VerticalIncrement*m_CameraDegreesPerSecond*Time.deltaTime;
 			m_VerticalAngle = Mathf.Clamp(m_VerticalAngle,m_MinimumVerticalAngle,m_MaximunmVerticalAngle);
 
-			m_CameraHorizontalPivot.rotation = Quaternion.Slerp(m_CameraHorizontalPivot.rotation, Quaternion.LookRotation(m_CameraToEnemy),m_TargetCameraSpeedMultipier*Time.deltaTime);
+			m_CameraHorizontalPivot.rotation = Quaternion.Slerp(m_CameraHorizontalPivot.rotation, Quaternion.LookRotation(m_CameraToEnemy),m_LockOnSpeedMultipier*Time.deltaTime);
 			m_CameraVerticalPivot.localRotation = Quaternion.Euler(m_VerticalAngle,0,0);
 
 			
 		}
 		else if (m_CenterCamera)
 		{
-			m_CameraHorizontalPivot.rotation = Quaternion.Slerp(m_CameraHorizontalPivot.rotation,Quaternion.Euler(0,m_PlayerHorizontalAngle,0),m_TargetCameraSpeedMultipier*Time.deltaTime);
-			m_CameraVerticalPivot.localRotation = Quaternion.Slerp(m_CameraVerticalPivot.localRotation,Quaternion.Euler(0,0,0), m_TargetCameraSpeedMultipier*Time.deltaTime);
+			m_CameraHorizontalPivot.rotation = Quaternion.Slerp(m_CameraHorizontalPivot.rotation,Quaternion.Euler(0,m_PlayerHorizontalAngle,0),m_ResetCameraSpeedMultipier*Time.deltaTime);
+			m_CameraVerticalPivot.localRotation = Quaternion.Slerp(m_CameraVerticalPivot.localRotation,Quaternion.Euler(0,0,0), m_ResetCameraSpeedMultipier*Time.deltaTime);
 			
 			m_HorizontalAngle = m_CameraHorizontalPivot.eulerAngles.y;
 			m_VerticalAngle = m_CameraVerticalPivot.localEulerAngles.x;
@@ -154,11 +156,11 @@ public class CameraMovementScript : MonoBehaviour
 				}
 			}
 			
-			m_HorizontalIncrement = Mathf.SmoothDamp(m_HorizontalIncrement,m_HorizontalInput,ref m_HorizontalSmoothVelocity, m_CameraSmoothMultiplier*Time.deltaTime);
-			m_VerticalIncrement = Mathf.SmoothDamp(m_VerticalIncrement,m_VerticalInput,ref m_VerticalSmoothVelocity, m_CameraSmoothMultiplier*Time.deltaTime);
+			m_HorizontalIncrement = Mathf.SmoothDamp(m_HorizontalIncrement,m_HorizontalInput,ref m_HorizontalSmoothVelocity, m_CameraSmoothMultiplier);
+			m_VerticalIncrement = Mathf.SmoothDamp(m_VerticalIncrement,m_VerticalInput,ref m_VerticalSmoothVelocity, m_CameraSmoothMultiplier);
 
-			m_HorizontalAngle += m_HorizontalIncrement*m_CameraSpeedMultiplier;
-			m_VerticalAngle += m_VerticalIncrement*m_CameraSpeedMultiplier;
+			m_HorizontalAngle += m_HorizontalIncrement*m_CameraDegreesPerSecond*Time.deltaTime;
+			m_VerticalAngle += m_VerticalIncrement*m_CameraDegreesPerSecond*Time.deltaTime;
 			m_VerticalAngle = Mathf.Clamp(m_VerticalAngle,m_MinimumVerticalAngle,m_MaximunmVerticalAngle);
 
 			m_CameraHorizontalPivot.rotation =  Quaternion.Euler(0,m_HorizontalAngle,0);	
