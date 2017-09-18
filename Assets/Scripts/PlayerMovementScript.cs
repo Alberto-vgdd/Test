@@ -10,8 +10,8 @@ public class PlayerMovementScript : MonoBehaviour
     private Transform m_PlayerTransform;
 
     // Input values.
-    private float m_HorizontalInput;
-    private float m_VerticalInput;
+    private Vector2 m_MovementInput;
+
 
     // Movement Axes for the player. M = V + H
     private Vector3 m_HorizontalDirection;
@@ -53,9 +53,16 @@ public class PlayerMovementScript : MonoBehaviour
 	// Update is called once per frame
 	void Update ()
     {
-        m_HorizontalInput = Input.GetAxis("Horizontal");
-        m_VerticalInput = Input.GetAxis("Vertical");
+        
+        // Update movement input and normalize the  vector to avoid diagonal acceleration.
+        m_MovementInput = new Vector2(Input.GetAxisRaw("Horizontal"),Input.GetAxisRaw("Vertical")) ;
 
+        if (Mathf.Abs(m_MovementInput.x)+Mathf.Abs(m_MovementInput.y) > 1 )
+        {
+            m_MovementInput.Normalize();
+        }
+
+        // Update movement directions 
         if (!SystemAndData.IsEnemyLocked)
         {
             m_HorizontalDirection = Vector3.Scale(m_CameraTransform.right, new Vector3(1f, 0f, 1f)).normalized;
@@ -68,14 +75,14 @@ public class PlayerMovementScript : MonoBehaviour
             m_HorizontalDirection = Vector3.Cross(m_VerticalDirection, -m_PlayerTransform.up).normalized;
         }
 
-        m_MovementDirection = m_HorizontalDirection * m_HorizontalInput + m_VerticalDirection * m_VerticalInput;
+        m_MovementDirection = m_HorizontalDirection * m_MovementInput.x + m_VerticalDirection * m_MovementInput.y;
     }
 
     void FixedUpdate()
     {
-
-        //Check if the player is grounded/sliding.
-        if (Physics.CapsuleCast(m_PlayerTransform.position + m_PlayerCapsuleCollider.center + Vector3.up *( m_PlayerCapsuleCollider.height / 2 -m_PlayerCapsuleCollider.radius), m_PlayerTransform.position + m_PlayerCapsuleCollider.center - Vector3.up *( m_PlayerCapsuleCollider.height / 2 -m_PlayerCapsuleCollider.radius), m_PlayerCapsuleCollider.radius*0.95f, -m_PlayerTransform.up, out m_PlayerToGroundRaycastHit, 0.25f, (1 << LayerMask.NameToLayer("Environment"))))
+        //                                         <---Height-->    
+        //Check if the player is grounded/sliding. ( * ===== * ) 
+        if (Physics.CapsuleCast(m_PlayerTransform.position + m_PlayerCapsuleCollider.center + m_PlayerTransform.up *( m_PlayerCapsuleCollider.height / 2 -m_PlayerCapsuleCollider.radius), m_PlayerTransform.position + m_PlayerCapsuleCollider.center - m_PlayerTransform.up *( m_PlayerCapsuleCollider.height / 2 -m_PlayerCapsuleCollider.radius), m_PlayerCapsuleCollider.radius*0.95f, -m_PlayerTransform.up, out m_PlayerToGroundRaycastHit, 0.25f, (1 << LayerMask.NameToLayer("Environment"))))
         {
             m_PlayerGrounded = true;
             m_TargetPlaneDirection = m_PlayerToGroundRaycastHit.normal;
@@ -90,11 +97,11 @@ public class PlayerMovementScript : MonoBehaviour
             }
 
             //This capsule cast is used to avoid the player to walk into slopes and start jittering when it is grounded.
-            if (Physics.CapsuleCast(m_PlayerTransform.position + m_PlayerCapsuleCollider.center + Vector3.up *( m_PlayerCapsuleCollider.height / 2 -m_PlayerCapsuleCollider.radius), m_PlayerTransform.position + m_PlayerCapsuleCollider.center - Vector3.up *( m_PlayerCapsuleCollider.height / 2 -m_PlayerCapsuleCollider.radius), m_PlayerCapsuleCollider.radius*0.95f, m_MovementDirection, out m_PlayerToGroundRaycastHit, m_MovementSpeed*Time.fixedDeltaTime, (1 << LayerMask.NameToLayer("Environment"))))
+            if (Physics.CapsuleCast(m_PlayerTransform.position + m_PlayerCapsuleCollider.center + m_PlayerTransform.up *( m_PlayerCapsuleCollider.height / 2 -m_PlayerCapsuleCollider.radius), m_PlayerTransform.position + m_PlayerCapsuleCollider.center - m_PlayerTransform.up *( m_PlayerCapsuleCollider.height / 2 -m_PlayerCapsuleCollider.radius), m_PlayerCapsuleCollider.radius*0.95f, m_MovementDirection, out m_PlayerToGroundRaycastHit, m_MovementSpeed*Time.fixedDeltaTime, (1 << LayerMask.NameToLayer("Environment"))))
             {
                 if (Vector3.Angle(m_PlayerToGroundRaycastHit.normal, Vector3.up) > 35f)
                 {
-                    m_MovementDirection += Vector3.Scale(m_MovementDirection,Vector3.Scale(m_PlayerToGroundRaycastHit.normal,new Vector3(1f,0f,1f))) * Mathf.Sign(Vector3.Dot(m_PlayerTransform.forward,Vector3.forward));
+                    m_MovementDirection += Vector3.Scale(m_MovementDirection,Vector3.Scale(m_PlayerToGroundRaycastHit.normal,new Vector3(1f,0f,1f))) * Mathf.Sign(Vector3.Dot(m_MovementDirection,Vector3.forward));
                 }
             }
         }
@@ -125,11 +132,11 @@ public class PlayerMovementScript : MonoBehaviour
         {
             if (!SystemAndData.IsEnemyLocked)
             {
-                m_PlayerTransform.forward = Vector3.SmoothDamp(m_PlayerTransform.forward, Vector3.Scale(m_PlayerRigidbody.velocity,new Vector3(1,0,1)) , ref m_TurnSpeed, m_TurnSmooth * Time.fixedDeltaTime);
+                m_PlayerTransform.forward = Vector3.SmoothDamp(m_PlayerTransform.forward, Vector3.Scale(m_PlayerRigidbody.velocity,new Vector3(1,0,1)) , ref m_TurnSpeed, m_TurnSmooth);
             }
             else
             {
-                m_PlayerTransform.forward = Vector3.SmoothDamp(m_PlayerTransform.forward, m_VerticalDirection, ref m_TurnSpeed, m_TurnSmooth * Time.fixedDeltaTime);
+                m_PlayerTransform.forward = Vector3.SmoothDamp(m_PlayerTransform.forward, m_VerticalDirection, ref m_TurnSpeed, m_TurnSmooth);
             }
             
         }
