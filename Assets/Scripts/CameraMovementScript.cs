@@ -21,6 +21,7 @@ public class CameraMovementScript : MonoBehaviour
 	public float m_CameraSmoothMultiplier;
 	[Range(60.0f, 240.0f)] //Degrees per second
 	public float m_JoystickSensitivy; 
+	[Range(1f, 10f)]   //Mouse sensitivity
 	public float m_MouseSensitivity;
 	public float m_ResetCameraSpeedMultipier;
 	public float m_LockOnSpeedMultipier;
@@ -108,6 +109,7 @@ public class CameraMovementScript : MonoBehaviour
 		m_Camera = m_CameraTransform.GetComponent<Camera>();
 
 		//TEST 
+		Application.targetFrameRate = 300;
 		Cursor.lockState = CursorLockMode.Locked;
 
 	}
@@ -137,6 +139,8 @@ public class CameraMovementScript : MonoBehaviour
 
 			m_CameraSpeed = m_MouseSensitivity;
 		
+			m_HorizontalInput = Input.GetAxis(m_HorizontalAxis); m_HorizontalInput *= (m_InvertHorizontalInput)? -1f:1f;
+			m_VerticalInput = Input.GetAxis(m_VerticalAxis); m_VerticalInput *= (m_InvertVerticalInput)? -1f:1f;
 
 
 		}
