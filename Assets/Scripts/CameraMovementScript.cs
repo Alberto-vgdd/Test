@@ -21,7 +21,6 @@ public class CameraMovementScript : MonoBehaviour
 	public float m_CameraSmoothMultiplier;
 	[Range(60.0f, 240.0f)] //Degrees per second
 	public float m_JoystickSensitivy; 
-	[Range(0.1f, 10.0f)]   //Mouse sensitivity
 	public float m_MouseSensitivity;
 	public float m_ResetCameraSpeedMultipier;
 	public float m_LockOnSpeedMultipier;
@@ -109,7 +108,6 @@ public class CameraMovementScript : MonoBehaviour
 		m_Camera = m_CameraTransform.GetComponent<Camera>();
 
 		//TEST 
-		Application.targetFrameRate = 3000;
 		Cursor.lockState = CursorLockMode.Locked;
 
 	}
@@ -138,9 +136,9 @@ public class CameraMovementScript : MonoBehaviour
 			m_InvertVerticalInput = m_InvertMouseVerticalInput;
 
 			m_CameraSpeed = m_MouseSensitivity;
+		
 
-			m_HorizontalInput = Input.GetAxis(m_HorizontalAxis)/Time.deltaTime; m_HorizontalInput *= (m_InvertHorizontalInput)? -1f:1f;
-			m_VerticalInput = Input.GetAxis(m_VerticalAxis)/Time.deltaTime;m_VerticalInput *= (m_InvertVerticalInput)? -1f:1f;
+
 		}
 		else
 		{
@@ -150,15 +148,13 @@ public class CameraMovementScript : MonoBehaviour
 			m_InvertHorizontalInput = m_InvertJoystickHorizontalInput;
 			m_InvertVerticalInput = m_InvertJoystickVerticalInput;
 
-			m_CameraSpeed = m_JoystickSensitivy;
+			m_CameraSpeed = m_JoystickSensitivy*Time.deltaTime;
 
 			m_HorizontalInput = Input.GetAxis(m_HorizontalAxis); m_HorizontalInput *= (m_InvertHorizontalInput)? -1f:1f;
 			m_VerticalInput = Input.GetAxis(m_VerticalAxis);m_VerticalInput *= (m_InvertVerticalInput)? -1f:1f;
 		}
 
-		
-			
-		Debug.Log(m_HorizontalInput);
+
 	}
 
 	void RotateAroundPlayer()
@@ -179,7 +175,7 @@ public class CameraMovementScript : MonoBehaviour
 			m_VerticalIncrement = Mathf.SmoothDamp(m_VerticalIncrement,m_VerticalInput,ref m_VerticalSmoothVelocity, m_CameraSmoothMultiplier);
 			
 			m_HorizontalAngle = m_CameraHorizontalPivot.eulerAngles.y;
-			m_VerticalAngle += m_VerticalIncrement*m_CameraSpeed*Time.deltaTime;
+			m_VerticalAngle += m_VerticalIncrement*m_CameraSpeed;
 			m_VerticalAngle = Mathf.Clamp(m_VerticalAngle,m_MinimumVerticalAngle,m_MaximunmVerticalAngle);
 
 			m_CameraHorizontalPivot.rotation = Quaternion.Slerp(m_CameraHorizontalPivot.rotation, Quaternion.LookRotation(m_CameraToEnemy),m_LockOnSpeedMultipier*Time.deltaTime);
@@ -202,24 +198,30 @@ public class CameraMovementScript : MonoBehaviour
 		}
 		else
 		{
-	
-			// If the user isn't moving the camera while the player is moving, auto rotate the camera.
-            if (m_HorizontalInput ==  0 && m_CameraAutoRotation)
+			// If the user isn't moving the camera while the player is moving, auto rotate the camera with joystick's speed.
+            if ( m_CameraAutoRotation && m_HorizontalInput ==  0 )
 			{
+				
 				m_PlayerXInViewport = m_Camera.WorldToViewportPoint(m_PlayerTransform.position).x;
+				m_HorizontalInput = (m_PlayerXInViewport - 0.5f)*m_CameraAutoRotateMultiplier;
 
-				if ( m_PlayerXInViewport != 0.5f )
-				{
-						m_HorizontalInput = (m_PlayerXInViewport - 0.5f)*m_CameraAutoRotateMultiplier;
-				}
+				m_HorizontalIncrement = Mathf.SmoothDamp(m_HorizontalIncrement,m_HorizontalInput,ref m_HorizontalSmoothVelocity, m_CameraSmoothMultiplier);
+				m_VerticalIncrement = Mathf.SmoothDamp(m_VerticalIncrement,m_VerticalInput,ref m_VerticalSmoothVelocity, m_CameraSmoothMultiplier);
+
+				m_HorizontalAngle += m_HorizontalIncrement*m_JoystickSensitivy*Time.deltaTime;
+				m_VerticalAngle += m_VerticalIncrement*m_JoystickSensitivy*Time.deltaTime;
+				m_VerticalAngle = Mathf.Clamp(m_VerticalAngle,m_MinimumVerticalAngle,m_MaximunmVerticalAngle);
+
 			}
-			
-			m_HorizontalIncrement = Mathf.SmoothDamp(m_HorizontalIncrement,m_HorizontalInput,ref m_HorizontalSmoothVelocity, m_CameraSmoothMultiplier);
-			m_VerticalIncrement = Mathf.SmoothDamp(m_VerticalIncrement,m_VerticalInput,ref m_VerticalSmoothVelocity, m_CameraSmoothMultiplier);
+			else
+			{
+				m_HorizontalIncrement = Mathf.SmoothDamp(m_HorizontalIncrement,m_HorizontalInput,ref m_HorizontalSmoothVelocity, m_CameraSmoothMultiplier);
+				m_VerticalIncrement = Mathf.SmoothDamp(m_VerticalIncrement,m_VerticalInput,ref m_VerticalSmoothVelocity, m_CameraSmoothMultiplier);
 
-			m_HorizontalAngle += m_HorizontalIncrement*m_CameraSpeed*Time.deltaTime;
-			m_VerticalAngle += m_VerticalIncrement*m_CameraSpeed*Time.deltaTime;
-			m_VerticalAngle = Mathf.Clamp(m_VerticalAngle,m_MinimumVerticalAngle,m_MaximunmVerticalAngle);
+				m_HorizontalAngle += m_HorizontalIncrement*m_CameraSpeed;
+				m_VerticalAngle += m_VerticalIncrement*m_CameraSpeed;
+				m_VerticalAngle = Mathf.Clamp(m_VerticalAngle,m_MinimumVerticalAngle,m_MaximunmVerticalAngle);
+			}
 
 			m_CameraHorizontalPivot.rotation =  Quaternion.Euler(0,m_HorizontalAngle,0);	
 			m_CameraVerticalPivot.localRotation = Quaternion.Euler(m_VerticalAngle,0,0);
