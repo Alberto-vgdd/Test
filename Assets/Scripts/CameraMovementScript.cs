@@ -19,11 +19,22 @@ public class CameraMovementScript : MonoBehaviour
 	[Header("Camera Movement Parameters")]
 	public float m_CameraFollowSpeedMultiplier;
 	public float m_CameraSmoothMultiplier;
-	public float m_CameraDegreesPerSecond;
+	[Range(60.0f, 240.0f)] //Degrees per second
+	public float m_JoystickSensitivy; 
+	[Range(0.1f, 10.0f)]   //Mouse sensitivity
+	public float m_MouseSensitivity;
 	public float m_ResetCameraSpeedMultipier;
 	public float m_LockOnSpeedMultipier;
-	public bool m_InvertHorizontalInput;
-	public bool m_InvertVerticalInput;
+	public bool m_InvertJoystickHorizontalInput;
+	public bool m_InvertJoystickVerticalInput;
+	public bool m_InvertMouseHorizontalInput;
+	public bool m_InvertMouseVerticalInput;
+
+	[Header("Axes Management")]
+	public string m_HorizontalAxesName;
+	public string m_VerticalAxesName;
+	public string m_JoystickSubfix;
+	public string m_MouseSubfix;
 
 	[Header("Camera Auto Rotation Parameters")]
 	public float m_CameraAutoRotateMultiplier; //2 is slow, 3 and 4 seem fine
@@ -39,7 +50,7 @@ public class CameraMovementScript : MonoBehaviour
 	private Transform m_CameraHorizontalPivot;
 	private Transform m_CameraVerticalPivot;
 
-	// Controller Inputs
+	// Camera Inputs.
 	private float m_HorizontalInput;
 	private float m_VerticalInput;
 
@@ -67,6 +78,14 @@ public class CameraMovementScript : MonoBehaviour
 	private Ray m_TargetToCameraRay;
 	private RaycastHit m_AvoidClippingRaycastHit;
 
+	// Variables to switch from mouse to joystick
+	private bool m_InvertHorizontalInput;
+	private bool m_InvertVerticalInput;
+	private float m_CameraSpeed;
+	private string m_HorizontalAxis;
+	private string m_VerticalAxis;
+
+
 
 
 
@@ -90,11 +109,16 @@ public class CameraMovementScript : MonoBehaviour
 		m_Camera = m_CameraTransform.GetComponent<Camera>();
 
 		//TEST 
-		Application.targetFrameRate = 200;
+		Application.targetFrameRate = 3000;
 		Cursor.lockState = CursorLockMode.Locked;
 
 	}
 	
+	void Update()
+	{
+		UpdateInputs();
+	}
+
 	void LateUpdate () 
 	{
 		RotateAroundPlayer();
@@ -103,15 +127,47 @@ public class CameraMovementScript : MonoBehaviour
 	}
 
 
+	void UpdateInputs()
+	{
+		if (Input.GetAxis(m_HorizontalAxesName+m_JoystickSubfix) == 0 &&  Input.GetAxis(m_VerticalAxesName+m_JoystickSubfix) == 0)
+		{
+			m_HorizontalAxis = m_HorizontalAxesName+m_MouseSubfix;
+			m_VerticalAxis = m_VerticalAxesName+m_MouseSubfix;
+
+			m_InvertHorizontalInput = m_InvertMouseHorizontalInput;
+			m_InvertVerticalInput = m_InvertMouseVerticalInput;
+
+			m_CameraSpeed = m_MouseSensitivity;
+
+			m_HorizontalInput = Input.GetAxis(m_HorizontalAxis)/Time.deltaTime; m_HorizontalInput *= (m_InvertHorizontalInput)? -1f:1f;
+			m_VerticalInput = Input.GetAxis(m_VerticalAxis)/Time.deltaTime;m_VerticalInput *= (m_InvertVerticalInput)? -1f:1f;
+		}
+		else
+		{
+			m_HorizontalAxis = m_HorizontalAxesName+m_JoystickSubfix;
+			m_VerticalAxis = m_VerticalAxesName+m_JoystickSubfix;
+
+			m_InvertHorizontalInput = m_InvertJoystickHorizontalInput;
+			m_InvertVerticalInput = m_InvertJoystickVerticalInput;
+
+			m_CameraSpeed = m_JoystickSensitivy;
+
+			m_HorizontalInput = Input.GetAxis(m_HorizontalAxis); m_HorizontalInput *= (m_InvertHorizontalInput)? -1f:1f;
+			m_VerticalInput = Input.GetAxis(m_VerticalAxis);m_VerticalInput *= (m_InvertVerticalInput)? -1f:1f;
+		}
+
+		
+			
+		Debug.Log(m_HorizontalInput);
+	}
+
 	void RotateAroundPlayer()
 	{
+		
 
 		if (SystemAndData.IsEnemyLocked)
 		{
 			
-			m_HorizontalInput = Input.GetAxis("CameraHorizontal"); 
-			m_VerticalInput = Input.GetAxis("CameraVertical");m_VerticalInput *= (m_InvertVerticalInput)? -1:1;
-
 			// If horizontal input is recieved, the lock on will be moved to another enemy.
 			ChangeLockOn();
 			
@@ -123,7 +179,7 @@ public class CameraMovementScript : MonoBehaviour
 			m_VerticalIncrement = Mathf.SmoothDamp(m_VerticalIncrement,m_VerticalInput,ref m_VerticalSmoothVelocity, m_CameraSmoothMultiplier);
 			
 			m_HorizontalAngle = m_CameraHorizontalPivot.eulerAngles.y;
-			m_VerticalAngle += m_VerticalIncrement*m_CameraDegreesPerSecond*Time.deltaTime;
+			m_VerticalAngle += m_VerticalIncrement*m_CameraSpeed*Time.deltaTime;
 			m_VerticalAngle = Mathf.Clamp(m_VerticalAngle,m_MinimumVerticalAngle,m_MaximunmVerticalAngle);
 
 			m_CameraHorizontalPivot.rotation = Quaternion.Slerp(m_CameraHorizontalPivot.rotation, Quaternion.LookRotation(m_CameraToEnemy),m_LockOnSpeedMultipier*Time.deltaTime);
@@ -146,10 +202,7 @@ public class CameraMovementScript : MonoBehaviour
 		}
 		else
 		{
-			m_HorizontalInput = Input.GetAxis("CameraHorizontal"); m_HorizontalInput *= (m_InvertHorizontalInput)? -1:1;
-			m_VerticalInput = Input.GetAxis("CameraVertical");m_VerticalInput *= (m_InvertVerticalInput)? -1:1;
-			
-
+	
 			// If the user isn't moving the camera while the player is moving, auto rotate the camera.
             if (m_HorizontalInput ==  0 && m_CameraAutoRotation)
 			{
@@ -164,8 +217,8 @@ public class CameraMovementScript : MonoBehaviour
 			m_HorizontalIncrement = Mathf.SmoothDamp(m_HorizontalIncrement,m_HorizontalInput,ref m_HorizontalSmoothVelocity, m_CameraSmoothMultiplier);
 			m_VerticalIncrement = Mathf.SmoothDamp(m_VerticalIncrement,m_VerticalInput,ref m_VerticalSmoothVelocity, m_CameraSmoothMultiplier);
 
-			m_HorizontalAngle += m_HorizontalIncrement*m_CameraDegreesPerSecond*Time.deltaTime;
-			m_VerticalAngle += m_VerticalIncrement*m_CameraDegreesPerSecond*Time.deltaTime;
+			m_HorizontalAngle += m_HorizontalIncrement*m_CameraSpeed*Time.deltaTime;
+			m_VerticalAngle += m_VerticalIncrement*m_CameraSpeed*Time.deltaTime;
 			m_VerticalAngle = Mathf.Clamp(m_VerticalAngle,m_MinimumVerticalAngle,m_MaximunmVerticalAngle);
 
 			m_CameraHorizontalPivot.rotation =  Quaternion.Euler(0,m_HorizontalAngle,0);	
