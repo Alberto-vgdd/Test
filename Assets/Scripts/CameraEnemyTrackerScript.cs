@@ -52,8 +52,9 @@ public class CameraEnemyTrackerScript : MonoBehaviour
         
     void UpdateLockOn()
     {
-        if (Input.GetButtonDown("Right Thumb"))
+        if (SystemAndData.GetLockOnButton())
         {
+            print("Pulsado");
             if (SystemAndData.IsEnemyLocked)
             {
                 UnlockEnemy();

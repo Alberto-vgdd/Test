@@ -21,7 +21,7 @@ public class CameraMovementScript : MonoBehaviour
 	public float m_CameraSmoothMultiplier;
 	[Range(60.0f, 240.0f)] //Degrees per second
 	public float m_JoystickSensitivy; 
-	[Range(1f, 10f)]   //Mouse sensitivity
+	[Range(0.01f, 1f)]   //Mouse sensitivity
 	public float m_MouseSensitivity;
 	public float m_ResetCameraSpeedMultipier;
 	public float m_LockOnSpeedMultipier;
@@ -82,11 +82,7 @@ public class CameraMovementScript : MonoBehaviour
 	private bool m_InvertHorizontalInput;
 	private bool m_InvertVerticalInput;
 	private float m_CameraSpeed;
-	private string m_HorizontalAxis;
-	private string m_VerticalAxis;
-
-
-
+	private bool m_JoystickInUse;
 
 
 
@@ -109,18 +105,16 @@ public class CameraMovementScript : MonoBehaviour
 		m_Camera = m_CameraTransform.GetComponent<Camera>();
 
 		//TEST 
-		Application.targetFrameRate = 300;
+		Application.targetFrameRate = 120;
 		Cursor.lockState = CursorLockMode.Locked;
+		m_JoystickInUse = false;
 
 	}
 	
-	void Update()
-	{
-		UpdateInputs();
-	}
 
 	void LateUpdate () 
 	{
+		UpdateInputs();
 		RotateAroundPlayer();
 		FollowPlayer();
 		AvoidClipping();
@@ -129,36 +123,23 @@ public class CameraMovementScript : MonoBehaviour
 
 	void UpdateInputs()
 	{
-		if (Input.GetAxis(m_HorizontalAxesName+m_JoystickSubfix) == 0 &&  Input.GetAxis(m_VerticalAxesName+m_JoystickSubfix) == 0)
+		m_JoystickInUse = SystemAndData.GetJoystickInUse();
+
+		if  (!m_JoystickInUse)
 		{
-			m_HorizontalAxis = m_HorizontalAxesName+m_MouseSubfix;
-			m_VerticalAxis = m_VerticalAxesName+m_MouseSubfix;
-
-			m_InvertHorizontalInput = m_InvertMouseHorizontalInput;
-			m_InvertVerticalInput = m_InvertMouseVerticalInput;
-
-			m_CameraSpeed = m_MouseSensitivity;
-		
-			m_HorizontalInput = Input.GetAxis(m_HorizontalAxis); m_HorizontalInput *= (m_InvertHorizontalInput)? -1f:1f;
-			m_VerticalInput = Input.GetAxis(m_VerticalAxis); m_VerticalInput *= (m_InvertVerticalInput)? -1f:1f;
-
-
+				m_InvertHorizontalInput = m_InvertMouseHorizontalInput;
+				m_InvertVerticalInput = m_InvertMouseVerticalInput;
+				m_CameraSpeed = m_MouseSensitivity;
 		}
 		else
 		{
-			m_HorizontalAxis = m_HorizontalAxesName+m_JoystickSubfix;
-			m_VerticalAxis = m_VerticalAxesName+m_JoystickSubfix;
-
-			m_InvertHorizontalInput = m_InvertJoystickHorizontalInput;
-			m_InvertVerticalInput = m_InvertJoystickVerticalInput;
-
-			m_CameraSpeed = m_JoystickSensitivy*Time.deltaTime;
-
-			m_HorizontalInput = Input.GetAxis(m_HorizontalAxis); m_HorizontalInput *= (m_InvertHorizontalInput)? -1f:1f;
-			m_VerticalInput = Input.GetAxis(m_VerticalAxis);m_VerticalInput *= (m_InvertVerticalInput)? -1f:1f;
+				m_InvertHorizontalInput = m_InvertJoystickHorizontalInput;
+				m_InvertVerticalInput = m_InvertJoystickVerticalInput;
+				m_CameraSpeed = m_JoystickSensitivy*Time.deltaTime;
 		}
 
-
+		m_HorizontalInput = SystemAndData.GetHorizontalCameraInput(); m_HorizontalInput *= (m_InvertHorizontalInput)? -1f:1f;
+		m_VerticalInput = SystemAndData.GetVerticalCameraInput(); m_VerticalInput *= (m_InvertVerticalInput)? -1f:1f;
 	}
 
 	void RotateAroundPlayer()
@@ -203,7 +184,7 @@ public class CameraMovementScript : MonoBehaviour
 		else
 		{
 			// If the user isn't moving the camera while the player is moving, auto rotate the camera with joystick's speed.
-            if ( m_CameraAutoRotation && m_HorizontalInput ==  0 )
+            if ( m_CameraAutoRotation && m_JoystickInUse && m_HorizontalInput ==  0 )
 			{
 				
 				m_PlayerXInViewport = m_Camera.WorldToViewportPoint(m_PlayerTransform.position).x;

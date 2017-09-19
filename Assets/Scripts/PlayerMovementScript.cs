@@ -55,7 +55,7 @@ public class PlayerMovementScript : MonoBehaviour
     {
         
         // Update movement input and normalize the  vector to avoid diagonal acceleration.
-        m_MovementInput = new Vector2(Input.GetAxisRaw("Horizontal"),Input.GetAxisRaw("Vertical")) ;
+        m_MovementInput = new Vector2(SystemAndData.GetHorizontalInput(),SystemAndData.GetVerticalInput()) ;
 
         if (Mathf.Abs(m_MovementInput.x)+Mathf.Abs(m_MovementInput.y) > 1 )
         {
