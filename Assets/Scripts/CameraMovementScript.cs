@@ -51,6 +51,7 @@ public class CameraMovementScript : MonoBehaviour
 	private Transform m_CameraVerticalPivot;
 
 	// Camera Inputs.
+	private float m_ChangeTargetInput;
 	private float m_HorizontalInput;
 	private float m_VerticalInput;
 
@@ -105,7 +106,7 @@ public class CameraMovementScript : MonoBehaviour
 		m_Camera = m_CameraTransform.GetComponent<Camera>();
 
 		//TEST 
-		Application.targetFrameRate = 120;
+		Application.targetFrameRate = 0;
 		Cursor.lockState = CursorLockMode.Locked;
 		m_JoystickInUse = false;
 
@@ -137,7 +138,7 @@ public class CameraMovementScript : MonoBehaviour
 				m_InvertVerticalInput = m_InvertJoystickVerticalInput;
 				m_CameraSpeed = m_JoystickSensitivy*Time.deltaTime;
 		}
-
+		m_ChangeTargetInput = SystemAndData.GetChangeTarget();m_ChangeTargetInput *= (m_InvertHorizontalInput)? -1f:1f;
 		m_HorizontalInput = SystemAndData.GetHorizontalCameraInput(); m_HorizontalInput *= (m_InvertHorizontalInput)? -1f:1f;
 		m_VerticalInput = SystemAndData.GetVerticalCameraInput(); m_VerticalInput *= (m_InvertVerticalInput)? -1f:1f;
 	}
@@ -149,7 +150,7 @@ public class CameraMovementScript : MonoBehaviour
 		if (SystemAndData.IsEnemyLocked)
 		{
 			
-			// If horizontal input is recieved, the lock on will be moved to another enemy.
+			// If any input has been recieved, the lock on will be moved to another enemy.
 			ChangeLockOn();
 			
 			// Manage Horizontal camera movement: Create a enemy to camera Vec3 with no height displacement. If the vector is 0, use the camera forward to avoid Quaternion problems.
@@ -231,15 +232,17 @@ public class CameraMovementScript : MonoBehaviour
 	
 	void ChangeLockOn()
 	{
-		if( Mathf.Abs(m_HorizontalInput) > 0.4f && !m_CameraLockOnAxisInUse)
+		if( Mathf.Abs(m_ChangeTargetInput) > 0f && !m_CameraLockOnAxisInUse)
 		{
-			SystemAndData.ChangeLockOn(m_HorizontalInput);
+			SystemAndData.ChangeLockOn(m_ChangeTargetInput);
 			m_CameraLockOnAxisInUse = true;
 		}
-		if( Mathf.Abs(m_HorizontalInput) <= 0.4f)
+		if( m_ChangeTargetInput == 0f)
 		{
 			m_CameraLockOnAxisInUse = false;
 		}
+		
+		
 	}
 
 	void AvoidClipping()

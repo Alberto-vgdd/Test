@@ -12,7 +12,6 @@ public class PlayerMovementScript : MonoBehaviour
     // Input values.
     private Vector2 m_MovementInput;
 
-
     // Movement Axes for the player. M = V + H
     private Vector3 m_HorizontalDirection;
     private Vector3 m_VerticalDirection;
@@ -21,8 +20,8 @@ public class PlayerMovementScript : MonoBehaviour
     // Ref value used to smoothly turn around.
     private Vector3 m_TurnSpeed;
 
-    [Header("Movement Parameters")]
     // Values to create a smooth movement.
+    [Header("Movement Parameters")]
     public float m_MovementSpeed;
     public float m_TurnSmooth;
     private Rigidbody m_PlayerRigidbody;
@@ -32,13 +31,13 @@ public class PlayerMovementScript : MonoBehaviour
     private CapsuleCollider m_PlayerCapsuleCollider;
 
     // Variables used to check if the player is grounded.
-    private RaycastHit m_PlayerToGroundRaycastHit;
+    private RaycastHit[] m_RaycastHitArray;
     public float m_PlayerToFloorOffset;
-    private bool m_PlayerGrounded;
-    private bool m_PlayerSliding;
+    public bool m_PlayerGrounded;
+    public bool m_PlayerSliding;
 
     // Variables to manage the jump direction
-    private Vector3 m_TargetPlaneDirection;
+    private Vector3 m_FloorNormal;
 
 
 
@@ -54,7 +53,7 @@ public class PlayerMovementScript : MonoBehaviour
 	void Update ()
     {
         
-        // Update movement input and normalize the  vector to avoid diagonal acceleration.
+        // Update movement input and normalize the vector to avoid diagonal acceleration.
         m_MovementInput = new Vector2(SystemAndData.GetHorizontalInput(),SystemAndData.GetVerticalInput()) ;
 
         if (Mathf.Abs(m_MovementInput.x)+Mathf.Abs(m_MovementInput.y) > 1 )
@@ -80,49 +79,58 @@ public class PlayerMovementScript : MonoBehaviour
 
     void FixedUpdate()
     {
-        //                                         <---Height-->    
-        //Check if the player is grounded/sliding. ( * ===== * ) 
-        if (Physics.CapsuleCast(m_PlayerTransform.position + m_PlayerCapsuleCollider.center + m_PlayerTransform.up *( m_PlayerCapsuleCollider.height / 2 -m_PlayerCapsuleCollider.radius), m_PlayerTransform.position + m_PlayerCapsuleCollider.center - m_PlayerTransform.up *( m_PlayerCapsuleCollider.height / 2 -m_PlayerCapsuleCollider.radius), m_PlayerCapsuleCollider.radius*0.95f, -m_PlayerTransform.up, out m_PlayerToGroundRaycastHit, 0.25f, (1 << LayerMask.NameToLayer("Environment"))))
-        {
-            m_PlayerGrounded = true;
-            m_TargetPlaneDirection = m_PlayerToGroundRaycastHit.normal;
+        // Asume that the player is not grounded/sliding at the start of the loop
+         m_PlayerGrounded = false; 
+         m_PlayerSliding = false;
+         m_FloorNormal = Vector3.up;
 
-            if (Vector3.Angle(m_TargetPlaneDirection, Vector3.up) > 35f)
-            {
-                m_PlayerSliding = true;
-            }
-            else
+        // CapsuleCast Below the player to determine the grounded/sliding state
+        m_RaycastHitArray = Physics.CapsuleCastAll(m_PlayerTransform.position + m_PlayerCapsuleCollider.center + m_PlayerTransform.up *( m_PlayerCapsuleCollider.height / 2 -m_PlayerCapsuleCollider.radius), m_PlayerTransform.position + m_PlayerCapsuleCollider.center - m_PlayerTransform.up *( m_PlayerCapsuleCollider.height / 2 -m_PlayerCapsuleCollider.radius), m_PlayerCapsuleCollider.radius*0.95f, -m_PlayerTransform.up, 0.25f, (1 << LayerMask.NameToLayer("Environment")));
+        
+        // If the player is grounded asume the player is sliding too
+        if (m_RaycastHitArray.Length > 0 ) 
+        {
+            m_PlayerGrounded = true; 
+            m_PlayerSliding = true;
+        }
+
+        // Check if the player is not sliding from the closest plane to the furthest.
+        foreach(RaycastHit hit in m_RaycastHitArray)
+        {
+            m_FloorNormal = hit.normal;
+
+            if (Vector3.Angle(hit.normal, Vector3.up) < 35f)
             {
                 m_PlayerSliding = false;
+                break;
             }
+        }
+        
 
-            //This capsule cast is used to avoid the player to walk into slopes and start jittering when it is grounded.
-            if (Physics.CapsuleCast(m_PlayerTransform.position + m_PlayerCapsuleCollider.center + m_PlayerTransform.up *( m_PlayerCapsuleCollider.height / 2 -m_PlayerCapsuleCollider.radius), m_PlayerTransform.position + m_PlayerCapsuleCollider.center - m_PlayerTransform.up *( m_PlayerCapsuleCollider.height / 2 -m_PlayerCapsuleCollider.radius), m_PlayerCapsuleCollider.radius*0.95f, m_MovementDirection, out m_PlayerToGroundRaycastHit, m_MovementSpeed*Time.fixedDeltaTime, (1 << LayerMask.NameToLayer("Environment"))))
+        if (m_MovementDirection != Vector3.zero)
+        {
+            // CapsuleCast in the direction of the movement to avoid the player to stick on walls.
+            m_RaycastHitArray = Physics.CapsuleCastAll(m_PlayerTransform.position + m_PlayerCapsuleCollider.center + m_PlayerTransform.up *( m_PlayerCapsuleCollider.height / 2 -m_PlayerCapsuleCollider.radius), m_PlayerTransform.position + m_PlayerCapsuleCollider.center - m_PlayerTransform.up *( m_PlayerCapsuleCollider.height / 2 -m_PlayerCapsuleCollider.radius), m_PlayerCapsuleCollider.radius*0.95f, m_MovementDirection, m_MovementSpeed*Time.fixedDeltaTime, (1 << LayerMask.NameToLayer("Environment")));
+
+            foreach(RaycastHit hit in m_RaycastHitArray)
             {
-                if (Vector3.Angle(m_PlayerToGroundRaycastHit.normal, Vector3.up) > 35f)
+                if (Vector3.Angle(hit.normal, Vector3.up) > 35f)
                 {
-                    m_MovementDirection += Vector3.Scale(m_MovementDirection,Vector3.Scale(m_PlayerToGroundRaycastHit.normal,new Vector3(1f,0f,1f))) * Mathf.Sign(Vector3.Dot(m_MovementDirection,Vector3.forward));
+                    m_MovementDirection -= Vector3.Project(m_MovementDirection, Vector3.Scale(hit.normal,new Vector3(1,0,1)).normalized);
                 }
             }
         }
-        else
-        {
-            m_PlayerGrounded = false;
-            m_PlayerSliding = false;
-            m_TargetPlaneDirection = Vector3.up;
-        }   
-
-
+        
         //Move the player
         m_PlayerRigidbody.velocity = m_MovementDirection * m_MovementSpeed +  Vector3.up*m_PlayerRigidbody.velocity.y;
 
         //If the player is on a steep, adjust the movement direction. If it is on a slope, it should fall.
-        if (m_TargetPlaneDirection != Vector3.up)
+        if (m_FloorNormal != Vector3.up)
         {
-            m_PlayerRigidbody.velocity = Vector3.ProjectOnPlane(m_PlayerRigidbody.velocity, m_TargetPlaneDirection);
+            m_PlayerRigidbody.velocity = Vector3.ProjectOnPlane(m_PlayerRigidbody.velocity, m_FloorNormal);
 
             if (m_PlayerSliding)
-            {
+            {  
                 m_PlayerRigidbody.velocity = new Vector3(m_PlayerRigidbody.velocity.x, Mathf.Min(m_PlayerRigidbody.velocity.y, -m_MovementSpeed), m_PlayerRigidbody.velocity.z);
             }  
         }

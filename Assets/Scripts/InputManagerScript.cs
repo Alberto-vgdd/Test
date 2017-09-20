@@ -5,25 +5,30 @@ using UnityEngine;
 public class InputManagerScript : MonoBehaviour 
 {
 	[Header("Mouse/Keyboard Axes")]
-	public string m_LockOnKeyboard;
 	public string m_HorizontalMovementKeyboard;
 	public string m_VerticalMovementKeyboard;
 	public string m_HorizontalCameraMovementKeyboard;
 	public string m_VerticalCameraMovementKeyboard;
+	public string m_LockOnKeyboard;
+	public string m_ChangeTargetKeyboard;
+
 
 
 	[Header("Joystick Axes")]
-	public string m_LockOnJoystick;
 	public string m_HorizontalMovementJoystick;
 	public string m_VerticalMovementJoystick;
 	public string m_HorizontalCameraMovementJoystick;
 	public string m_VerticalCameraMovementJoystick;
+	public string m_LockOnJoystick;
+	public string m_ChangeTargetJoystick;
+
 
 
 
 	// Variables the other scripts are going to use
 	private bool m_JoystickInUse;
 	private bool m_LockOnButton;
+	private float m_ChangeTarget;
 	private float m_HorizontalInput;
 	private float m_VerticalInput;
 	private float m_HorizontalCameraInput;
@@ -43,6 +48,7 @@ public class InputManagerScript : MonoBehaviour
 		if (m_JoystickInUse)
 		{
 			m_LockOnButton = Input.GetButtonDown(m_LockOnJoystick);
+			m_ChangeTarget = Input.GetAxisRaw(m_ChangeTargetJoystick);
 			m_HorizontalInput = Input.GetAxisRaw(m_HorizontalMovementJoystick);
 			m_VerticalInput = Input.GetAxisRaw(m_VerticalMovementJoystick);
 			m_HorizontalCameraInput = Input.GetAxis(m_HorizontalCameraMovementJoystick);
@@ -51,6 +57,7 @@ public class InputManagerScript : MonoBehaviour
 		else
 		{
 			m_LockOnButton = Input.GetButtonDown(m_LockOnKeyboard);
+			m_ChangeTarget = Input.GetAxisRaw(m_ChangeTargetKeyboard);
 			m_HorizontalInput = Input.GetAxisRaw(m_HorizontalMovementKeyboard);
 			m_VerticalInput = Input.GetAxisRaw(m_VerticalMovementKeyboard);
 			m_HorizontalCameraInput = Input.GetAxis(m_HorizontalCameraMovementKeyboard);
@@ -103,4 +110,5 @@ public class InputManagerScript : MonoBehaviour
     public float GetHorizontalCameraInput(){    return m_HorizontalCameraInput;}
     public float GetVerticalCameraInput(){    return m_VerticalCameraInput;}
     public bool GetLockOnButton(){    return m_LockOnButton;}
+	public float GetChangeTarget(){		return m_ChangeTarget;}
 }
