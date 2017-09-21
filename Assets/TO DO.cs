@@ -10,6 +10,4 @@ public class TODO
     // PLAYER MOVEMENT SCRIPT
     //     2 Make the player turn around smoothly and properly
 
-    // INPUT MANAGER SCRIPT
-    //     1 Switching from mouse to controller doesn't work properly ** Only in desktop PC
 }

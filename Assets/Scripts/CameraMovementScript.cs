@@ -106,7 +106,7 @@ public class CameraMovementScript : MonoBehaviour
 		m_Camera = m_CameraTransform.GetComponent<Camera>();
 
 		//TEST 
-		Application.targetFrameRate = 0;
+		Application.targetFrameRate = 999;
 		Cursor.lockState = CursorLockMode.Locked;
 		m_JoystickInUse = false;
 
