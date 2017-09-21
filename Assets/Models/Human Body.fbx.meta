@@ -3,7 +3,7 @@ guid: 448da5a868bfd1e40be0f44d33a7daf9
 timeCreated: 1496788072
 licenseType: Free
 ModelImporter:
-  serializedVersion: 19
+  serializedVersion: 21
   fileIDToRecycleName:
     100000: arm_L
     100002: arm_R
@@ -32,6 +32,7 @@ ModelImporter:
     100048: spine
     100050: upleg_L
     100052: upleg_R
+    100054: Low Poly Model RIG
     400000: arm_L
     400002: arm_R
     400004: Armature
@@ -59,7 +60,11 @@ ModelImporter:
     400048: spine
     400050: upleg_L
     400052: upleg_R
+    400054: Low Poly Model RIG
+    2300000: Low Poly Model RIG
+    3300000: Low Poly Model RIG
     4300000: Cube
+    4300002: Low Poly Model RIG
     9500000: //RootNode
     13700000: Cube
   materials:
@@ -72,7 +77,8 @@ ModelImporter:
     resampleCurves: 1
     optimizeGameObjects: 0
     motionNodeName: 
-    rigImportErrors: 
+    rigImportErrors: "Avatar creation failed:\n\tTransform 'hips' for human bone 'Hips'
+      not found\n"
     rigImportWarnings: 
     animationImportErrors: 
     animationImportWarnings: 
@@ -84,6 +90,7 @@ ModelImporter:
     animationScaleError: 0.5
     animationWrapMode: 0
     extraExposedTransformPaths: []
+    extraUserProperties: []
     clipAnimations: []
     isReadable: 1
   meshes:
@@ -91,7 +98,10 @@ ModelImporter:
     globalScale: 1
     meshCompression: 0
     addColliders: 0
+    importVisibility: 0
     importBlendShapes: 1
+    importCameras: 0
+    importLights: 0
     swapUVChannels: 0
     generateSecondaryUV: 0
     useFileUnits: 1
@@ -104,9 +114,10 @@ ModelImporter:
     secondaryUVPackMargin: 4
     useFileScale: 1
   tangentSpace:
-    normalSmoothAngle: 60
+    normalSmoothAngle: 180
     normalImportMode: 1
     tangentImportMode: 3
+    normalCalculationMode: 0
   importAnimation: 1
   copyAvatar: 0
   humanDescription:
