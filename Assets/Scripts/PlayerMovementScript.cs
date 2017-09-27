@@ -40,6 +40,12 @@ public class PlayerMovementScript : MonoBehaviour
     private Vector3 m_FloorNormal;
 
 
+    // Variables for the Player Animation
+    [Header("Player Animator")]
+    public Animator m_PlayerAnimator;
+    private bool m_PlayerWalking;
+
+
 
     // Use this for initialization
     void Awake ()
@@ -56,6 +62,7 @@ public class PlayerMovementScript : MonoBehaviour
         // Update movement input and normalize the vector to avoid diagonal acceleration.
         m_MovementInput = new Vector2(SystemAndData.GetHorizontalInput(),SystemAndData.GetVerticalInput()) ;
 
+        // m_MovementInput.magnitude?
         if (Mathf.Abs(m_MovementInput.x)+Mathf.Abs(m_MovementInput.y) > 1 )
         {
             m_MovementInput.Normalize();
@@ -75,6 +82,11 @@ public class PlayerMovementScript : MonoBehaviour
         }
 
         m_MovementDirection = m_HorizontalDirection * m_MovementInput.x + m_VerticalDirection * m_MovementInput.y;
+
+        // ANIMATION TEST
+         m_PlayerWalking = (m_MovementInput.magnitude != 0) ? true : false;
+         m_PlayerAnimator.SetBool("Walk", m_PlayerWalking);
+    
     }
 
     void FixedUpdate()
