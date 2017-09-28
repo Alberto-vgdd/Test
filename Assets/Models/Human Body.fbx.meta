@@ -189,7 +189,7 @@ ModelImporter:
     bakeSimulation: 0
     resampleCurves: 1
     optimizeGameObjects: 0
-    motionNodeName: 
+    motionNodeName: <Root Transform>
     rigImportErrors: 
     rigImportWarnings: 
     animationImportErrors: 
@@ -286,7 +286,38 @@ ModelImporter:
       heightFromFeet: 0
       mirror: 0
       bodyMask: 01000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
-      curves: []
+      curves:
+      - name: Curve
+        curve:
+          serializedVersion: 2
+          curve:
+          - serializedVersion: 2
+            time: 0
+            value: 1.0034485
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 136
+          - serializedVersion: 2
+            time: 0.5018472
+            value: 0.83066237
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 136
+          - serializedVersion: 2
+            time: 0.99697465
+            value: 1.0034294
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+          - serializedVersion: 2
+            time: 1
+            value: 1.0034485
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+          preInfinity: 2
+          postInfinity: 2
+          rotationOrder: 0
       events: []
       transformMask: []
       maskType: 3
