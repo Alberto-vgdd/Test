@@ -42,7 +42,7 @@ public class PlayerMovementScript : MonoBehaviour
 
     // Variables for the Player Animation
     [Header("Player Animator")]
-    public Animator m_PlayerAnimator;
+    //public Animator m_PlayerAnimator;
     private bool m_PlayerWalking;
 
 
@@ -84,8 +84,8 @@ public class PlayerMovementScript : MonoBehaviour
         m_MovementDirection = m_HorizontalDirection * m_MovementInput.x + m_VerticalDirection * m_MovementInput.y;
 
         // ANIMATION TEST
-         m_PlayerWalking = (m_MovementInput.magnitude != 0) ? true : false;
-         m_PlayerAnimator.SetBool("Walk", m_PlayerWalking);
+        //m_PlayerWalking = (m_MovementInput.magnitude != 0) ? true : false;
+        //m_PlayerAnimator.SetBool("Walk", m_PlayerWalking);
     
     }
 
