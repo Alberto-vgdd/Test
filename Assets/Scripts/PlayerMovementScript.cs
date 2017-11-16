@@ -4,10 +4,10 @@ using UnityEngine;
 
 public class PlayerMovementScript : MonoBehaviour
 {
-    // Transforms to calculate the direction of the movement.
+    
     [Header("Camera Transform")]
+    // Transform to calculate the direction of the movement.
     public Transform m_CameraTransform;
-    private Transform m_PlayerTransform;
 
     // Input values.
     private Vector2 m_MovementInput;
@@ -17,34 +17,41 @@ public class PlayerMovementScript : MonoBehaviour
     private Vector3 m_VerticalDirection;
     private Vector3 m_MovementDirection;
 
+
+
+    [Header("Movement Parameters")]
+    // Values to create a smooth movement.
+    public float m_MovementSpeed;
+    public float m_TurnSmoothTime;
+    private Vector3 m_PlayerCurrentVelocity;
     // Ref value used to smoothly turn around.
     private Vector3 m_TurnSpeed;
 
-    // Values to create a smooth movement.
-    [Header("Movement Parameters")]
-    public float m_MovementSpeed;
-    public float m_TurnSmooth;
-    private Rigidbody m_PlayerRigidbody;
-    private Vector3 m_PlayerCurrentVelocity;
 
-    // A reference to the player's collider
-    private CapsuleCollider m_PlayerCapsuleCollider;
-
-    // Variables used to check if the player is grounded.
-    private RaycastHit[] m_RaycastHitArray;
+    // Variables used to check if the player is grounded/sliding.
+    // Also used to avoid sticking to walls.
     public float m_PlayerToFloorOffset;
-    public bool m_PlayerGrounded;
-    public bool m_PlayerSliding;
-
-    // Variables to manage the jump direction
+    public float m_SlopeAngle;
+    private bool m_PlayerGrounded;
+    private bool m_PlayerSliding;
+    private RaycastHit[] m_RaycastHitArray;
     private Vector3 m_FloorNormal;
 
+    public LayerMask m_EnvironmentLayerMask;
+    Vector3 point1;
+    Vector3 point2;
+    float radius;
 
-    // Variables for the Player Animation
+
+    // Player components
+    private Rigidbody m_PlayerRigidbody;
+    private CapsuleCollider m_PlayerCapsuleCollider;
+    private Transform m_PlayerTransform;
+
     [Header("Player Animator")]
-    //public Animator m_PlayerAnimator;
+    public Animator m_PlayerAnimator;
+    // Variables for the Player Animation
     private bool m_PlayerWalking;
-
 
 
     // Use this for initialization
@@ -53,6 +60,7 @@ public class PlayerMovementScript : MonoBehaviour
         SystemAndData.PlayerTransform = m_PlayerTransform = transform;
         m_PlayerRigidbody = m_PlayerTransform.GetComponent<Rigidbody>();
         m_PlayerCapsuleCollider = m_PlayerTransform.GetComponent<CapsuleCollider>();
+        radius = m_PlayerCapsuleCollider.radius;
     }
 	
 	// Update is called once per frame
@@ -83,21 +91,22 @@ public class PlayerMovementScript : MonoBehaviour
 
         m_MovementDirection = m_HorizontalDirection * m_MovementInput.x + m_VerticalDirection * m_MovementInput.y;
 
-        // ANIMATION TEST
-        //m_PlayerWalking = (m_MovementInput.magnitude != 0) ? true : false;
-        //m_PlayerAnimator.SetBool("Walk", m_PlayerWalking);
+       
     
     }
 
     void FixedUpdate()
     {
+        // This is used to update variables for the capsule casts.
+        UpdatePlayerCapsulePosition();
+
         // Asume that the player is not grounded/sliding at the start of the loop
-         m_PlayerGrounded = false; 
-         m_PlayerSliding = false;
-         m_FloorNormal = Vector3.up;
+        m_PlayerGrounded = false; 
+        m_PlayerSliding = false;
+        m_FloorNormal = Vector3.up;
 
         // CapsuleCast Below the player to determine the grounded/sliding state
-        m_RaycastHitArray = Physics.CapsuleCastAll(m_PlayerTransform.position + m_PlayerCapsuleCollider.center + m_PlayerTransform.up *( m_PlayerCapsuleCollider.height / 2 -m_PlayerCapsuleCollider.radius), m_PlayerTransform.position + m_PlayerCapsuleCollider.center - m_PlayerTransform.up *( m_PlayerCapsuleCollider.height / 2 -m_PlayerCapsuleCollider.radius), m_PlayerCapsuleCollider.radius*0.95f, -m_PlayerTransform.up, 0.25f, (1 << LayerMask.NameToLayer("Environment")));
+        m_RaycastHitArray = CapsuleCastFromPlayer(0.95f,Vector3.down,m_PlayerToFloorOffset,m_EnvironmentLayerMask.value);
         
         // If the player is grounded asume the player is sliding too
         if (m_RaycastHitArray.Length > 0 ) 
@@ -111,7 +120,7 @@ public class PlayerMovementScript : MonoBehaviour
         {
             m_FloorNormal = hit.normal;
 
-            if (Vector3.Angle(hit.normal, Vector3.up) < 35f)
+            if (Vector3.Angle(hit.normal, Vector3.up) < m_SlopeAngle)
             {
                 m_PlayerSliding = false;
                 break;
@@ -122,11 +131,11 @@ public class PlayerMovementScript : MonoBehaviour
         if (m_MovementDirection != Vector3.zero)
         {
             // CapsuleCast in the direction of the movement to avoid the player to stick on walls.
-            m_RaycastHitArray = Physics.CapsuleCastAll(m_PlayerTransform.position + m_PlayerCapsuleCollider.center + m_PlayerTransform.up *( m_PlayerCapsuleCollider.height / 2 -m_PlayerCapsuleCollider.radius), m_PlayerTransform.position + m_PlayerCapsuleCollider.center - m_PlayerTransform.up *( m_PlayerCapsuleCollider.height / 2 -m_PlayerCapsuleCollider.radius), m_PlayerCapsuleCollider.radius*0.95f, m_MovementDirection, m_MovementSpeed*Time.fixedDeltaTime, (1 << LayerMask.NameToLayer("Environment")));
-
+            m_RaycastHitArray = CapsuleCastFromPlayer(0.95f,m_MovementDirection,m_MovementSpeed*Time.fixedDeltaTime,m_EnvironmentLayerMask.value);
+            
             foreach(RaycastHit hit in m_RaycastHitArray)
             {
-                if (Vector3.Angle(hit.normal, Vector3.up) > 35f)
+                if (Vector3.Angle(hit.normal, Vector3.up) > m_SlopeAngle)
                 {
                     m_MovementDirection -= Vector3.Project(m_MovementDirection, Vector3.Scale(hit.normal,new Vector3(1,0,1)).normalized);
                 }
@@ -152,11 +161,11 @@ public class PlayerMovementScript : MonoBehaviour
         {
             if (!SystemAndData.IsEnemyLocked)
             {
-                m_PlayerTransform.forward = Vector3.SmoothDamp(m_PlayerTransform.forward, Vector3.Scale(m_PlayerRigidbody.velocity,new Vector3(1,0,1)) , ref m_TurnSpeed, m_TurnSmooth);
+                m_PlayerTransform.forward = Vector3.SmoothDamp(m_PlayerTransform.forward, Vector3.Scale(m_PlayerRigidbody.velocity,new Vector3(1,0,1)) , ref m_TurnSpeed, m_TurnSmoothTime);
             }
             else
             {
-                m_PlayerTransform.forward = Vector3.SmoothDamp(m_PlayerTransform.forward, m_VerticalDirection, ref m_TurnSpeed, m_TurnSmooth);
+                m_PlayerTransform.forward = Vector3.SmoothDamp(m_PlayerTransform.forward, m_VerticalDirection, ref m_TurnSpeed, m_TurnSmoothTime);
             }
             
         }
@@ -164,5 +173,23 @@ public class PlayerMovementScript : MonoBehaviour
         //Add gravity the player.
         m_PlayerRigidbody.AddForce(Physics.gravity*2f,ForceMode.Acceleration);
 
+
+        // ANIMATION TEST
+        m_PlayerWalking = (m_MovementInput.magnitude != 0) ? true : false;
+        m_PlayerAnimator.SetBool("Walk", m_PlayerWalking);
+        m_PlayerAnimator.SetBool("Fall", !m_PlayerGrounded);
+        m_PlayerAnimator.SetBool("Slide", m_PlayerSliding);
+
+    }
+
+    void UpdatePlayerCapsulePosition()
+    {
+        point1 = m_PlayerTransform.position + m_PlayerCapsuleCollider.center + m_PlayerTransform.up *( m_PlayerCapsuleCollider.height / 2 -radius);
+        point2 = m_PlayerTransform.position + m_PlayerCapsuleCollider.center - m_PlayerTransform.up *( m_PlayerCapsuleCollider.height / 2 -radius);
+    }
+
+    RaycastHit[] CapsuleCastFromPlayer(float radiusScale,Vector3 direction, float distance, int layerMask)
+    {
+        return Physics.CapsuleCastAll(point1,point2, radius*radiusScale, direction, distance, layerMask);
     }
 }
