@@ -52,6 +52,7 @@ public class PlayerMovementScript : MonoBehaviour
     public Animator m_PlayerAnimator;
     // Variables for the Player Animation
     private bool m_PlayerWalking;
+    private bool m_PlayerRunning;
 
 
     // Use this for initialization
@@ -176,7 +177,9 @@ public class PlayerMovementScript : MonoBehaviour
 
         // ANIMATION TEST
         m_PlayerWalking = (m_MovementInput.magnitude != 0) ? true : false;
+        m_PlayerRunning = (m_MovementInput.magnitude > 0.55f) ? true : false;
         m_PlayerAnimator.SetBool("Walk", m_PlayerWalking);
+        m_PlayerAnimator.SetBool("Run", m_PlayerRunning);
         m_PlayerAnimator.SetBool("Fall", !m_PlayerGrounded);
         m_PlayerAnimator.SetBool("Slide", m_PlayerSliding);
 
