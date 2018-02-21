@@ -8,8 +8,4 @@ public class TODO
     //     3   Release lock-on if the enemy stays 2 secs behind a wall.
 
     // PLAYER MOVEMENT SCRIPT
-    //     4 Interpolation between walk-run
-    //     2 Make the player turn around smoothly and properly
-    //     1 When the player is about to fall, it slides for a brief period
-
 }

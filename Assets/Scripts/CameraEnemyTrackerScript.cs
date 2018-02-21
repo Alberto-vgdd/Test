@@ -52,9 +52,9 @@ public class CameraEnemyTrackerScript : MonoBehaviour
         
     void UpdateLockOn()
     {
+    
         if (SystemAndData.GetLockOnButton())
         {
-            
             if (SystemAndData.IsEnemyLocked)
             {
                 UnlockEnemy();

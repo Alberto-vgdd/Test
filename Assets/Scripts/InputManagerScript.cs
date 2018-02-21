@@ -23,10 +23,13 @@ public class InputManagerScript : MonoBehaviour
 	public string m_ChangeTargetJoystick;
 
 
-
+	[Header("Movement Axes variables")]
+	public float movementAxesSmoothTime;
+	private float horizontalInputCurrentVelocity;
+	private float verticalInputCurrentVelocity;
 
 	// Variables the other scripts are going to use
-	private bool m_JoystickInUse;
+	public bool m_JoystickInUse;
 	private bool m_LockOnButton;
 	private float m_ChangeTarget;
 	private float m_HorizontalInput;
@@ -49,8 +52,8 @@ public class InputManagerScript : MonoBehaviour
 		{
 			m_LockOnButton = Input.GetButtonDown(m_LockOnJoystick);
 			m_ChangeTarget = Input.GetAxisRaw(m_ChangeTargetJoystick);
-			m_HorizontalInput = Input.GetAxisRaw(m_HorizontalMovementJoystick);
-			m_VerticalInput = Input.GetAxisRaw(m_VerticalMovementJoystick);
+			m_HorizontalInput = Mathf.SmoothDamp(m_HorizontalInput, Input.GetAxis(m_HorizontalMovementJoystick),ref horizontalInputCurrentVelocity, movementAxesSmoothTime);
+			m_VerticalInput = Mathf.SmoothDamp(m_VerticalInput, Input.GetAxis(m_VerticalMovementJoystick),ref verticalInputCurrentVelocity, movementAxesSmoothTime);
 			m_HorizontalCameraInput = Input.GetAxis(m_HorizontalCameraMovementJoystick);
 			m_VerticalCameraInput = Input.GetAxis(m_VerticalCameraMovementJoystick);
 		}
@@ -58,8 +61,8 @@ public class InputManagerScript : MonoBehaviour
 		{
 			m_LockOnButton = Input.GetButtonDown(m_LockOnKeyboard);
 			m_ChangeTarget = Input.GetAxisRaw(m_ChangeTargetKeyboard);
-			m_HorizontalInput = Input.GetAxisRaw(m_HorizontalMovementKeyboard);
-			m_VerticalInput = Input.GetAxisRaw(m_VerticalMovementKeyboard);
+			m_HorizontalInput = Input.GetAxis(m_HorizontalMovementKeyboard);
+			m_VerticalInput = Input.GetAxis(m_VerticalMovementKeyboard);
 			m_HorizontalCameraInput = Input.GetAxis(m_HorizontalCameraMovementKeyboard);
 			m_VerticalCameraInput = Input.GetAxis(m_VerticalCameraMovementKeyboard);
 		}
@@ -68,39 +71,57 @@ public class InputManagerScript : MonoBehaviour
 
 	bool IsJoystickInUse()
 	{
-		if(Input.GetKey(KeyCode.Joystick1Button0)  ||
-		Input.GetKey(KeyCode.Joystick1Button1)  ||
-		Input.GetKey(KeyCode.Joystick1Button2)  ||
-		Input.GetKey(KeyCode.Joystick1Button3)  ||
-		Input.GetKey(KeyCode.Joystick1Button4)  ||
-		Input.GetKey(KeyCode.Joystick1Button5)  ||
-		Input.GetKey(KeyCode.Joystick1Button6)  ||
-		Input.GetKey(KeyCode.Joystick1Button7)  ||
-		Input.GetKey(KeyCode.Joystick1Button8)  ||
-		Input.GetKey(KeyCode.Joystick1Button9)  ||
-		Input.GetKey(KeyCode.Joystick1Button10) ||
-		Input.GetKey(KeyCode.Joystick1Button11) ||
-		Input.GetKey(KeyCode.Joystick1Button12) ||
-		Input.GetKey(KeyCode.Joystick1Button13) ||
-		Input.GetKey(KeyCode.Joystick1Button14) ||
-		Input.GetKey(KeyCode.Joystick1Button15) ||
-		Input.GetKey(KeyCode.Joystick1Button16) ||
-		Input.GetKey(KeyCode.Joystick1Button17) ||
-		Input.GetKey(KeyCode.Joystick1Button18) ||
-		Input.GetKey(KeyCode.Joystick1Button19) )
+		if (m_JoystickInUse)
 		{
-			return true;
+			if (Input.GetButton(m_LockOnKeyboard) ||
+			Input.GetButton(m_ChangeTargetKeyboard) ||
+			Input.GetAxis(m_HorizontalCameraMovementKeyboard) != 0.0f ||
+			Input.GetAxis(m_VerticalCameraMovementKeyboard) != 0.0f ||
+			Input.GetAxis(m_HorizontalMovementKeyboard) != 0.0f ||
+			Input.GetAxis(m_VerticalMovementKeyboard) != 0.0f)
+			{
+				return false;
+			}
+		}
+		else
+		{
+			if(Input.GetKey(KeyCode.Joystick1Button0)  ||
+			Input.GetKey(KeyCode.Joystick1Button1)  ||
+			Input.GetKey(KeyCode.Joystick1Button2)  ||
+			Input.GetKey(KeyCode.Joystick1Button3)  ||
+			Input.GetKey(KeyCode.Joystick1Button4)  ||
+			Input.GetKey(KeyCode.Joystick1Button5)  ||
+			Input.GetKey(KeyCode.Joystick1Button6)  ||
+			Input.GetKey(KeyCode.Joystick1Button7)  ||
+			Input.GetKey(KeyCode.Joystick1Button8)  ||
+			Input.GetKey(KeyCode.Joystick1Button9)  ||
+			Input.GetKey(KeyCode.Joystick1Button10) ||
+			Input.GetKey(KeyCode.Joystick1Button11) ||
+			Input.GetKey(KeyCode.Joystick1Button12) ||
+			Input.GetKey(KeyCode.Joystick1Button13) ||
+			Input.GetKey(KeyCode.Joystick1Button14) ||
+			Input.GetKey(KeyCode.Joystick1Button15) ||
+			Input.GetKey(KeyCode.Joystick1Button16) ||
+			Input.GetKey(KeyCode.Joystick1Button17) ||
+			Input.GetKey(KeyCode.Joystick1Button18) ||
+			Input.GetKey(KeyCode.Joystick1Button19) )
+			{
+				return true;
+			}
+
+			if(Input.GetAxis(m_HorizontalCameraMovementJoystick) != 0.0f ||
+			Input.GetAxis(m_VerticalCameraMovementJoystick) != 0.0f ||
+			Input.GetAxis(m_HorizontalMovementJoystick) != 0.0f ||
+			Input.GetAxis(m_VerticalMovementJoystick) != 0.0f)
+			{
+				return true;
+			}
 		}
 
-		if(Input.GetAxis(m_HorizontalCameraMovementJoystick) != 0.0f ||
-		Input.GetAxis(m_VerticalCameraMovementJoystick) != 0.0f ||
-		Input.GetAxis(m_HorizontalMovementJoystick) != 0.0f ||
-		Input.GetAxis(m_VerticalMovementJoystick) != 0.0f)
-		{
-			return true;
-		}
+		return m_JoystickInUse;
 		
-		return false;
+		
+		
 	}
 
 	// Getters
