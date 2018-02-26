@@ -5,7 +5,8 @@ using UnityEngine;
 public class TODO
 {
     // CAMERA & LOCK-ON
-    //     3   Release lock-on if the enemy stays 2 secs behind a wall.
-
+    //     4    Release lock-on if the enemy stays 2 secs behind a wall.
     // PLAYER MOVEMENT SCRIPT
+    //     1    Fix a bug that prevents the player to walk down steeps.
+    
 }
