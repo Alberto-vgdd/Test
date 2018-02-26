@@ -11,7 +11,7 @@ public class Character2DMovementScript : MonoBehaviour
 	private float TURN_TIME = 0.5f;
 
 	private Rigidbody2D rigidbody2d;
-	private CapsuleCollider2D capsuleCollider2d;
+	// private CapsuleCollider2D capsuleCollider2d;
 	private SpriteRenderer spriteRenderer;
 	private Animator animator;
 
@@ -34,7 +34,7 @@ public class Character2DMovementScript : MonoBehaviour
 	void Awake()
 	{
 		rigidbody2d = GetComponent<Rigidbody2D>();
-		capsuleCollider2d = GetComponent<CapsuleCollider2D>();
+		// capsuleCollider2d = GetComponent<CapsuleCollider2D>();
 		
 
 		Transform spriteTransform = transform.Find(SPRITE_NAME);

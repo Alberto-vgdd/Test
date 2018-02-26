@@ -187,7 +187,7 @@ public class PlayerMovementScript : MonoBehaviour
         if (!Vector3Equal(movementDirection, Vector3.zero))
         {
             
-            raycastHitArray = CapsuleCastFromPlayer(movementDirection,movementDirection.magnitude*movementSpeed*Time.fixedDeltaTime,environmentLayerMask.value);
+            raycastHitArray = CapsuleCastFromPlayer(movementDirection,movementSpeed*Time.fixedDeltaTime,environmentLayerMask.value);
 
             // This value is used to keep the movementSpeed after constraining the direction.
             float oldMovementMagnitude = movementDirection.magnitude;
@@ -207,9 +207,9 @@ public class PlayerMovementScript : MonoBehaviour
                 {
                     // ...and another capsule collider hits the same object, or the normal is "pointing downwards"
                     RaycastHit hitInfo;
-                    if (Physics.CapsuleCast(point1,point2+Vector3.up*stepOffset,radius,movementDirection,out hitInfo,1f,environmentLayerMask.value) || raycastHitArray[i].normal.y < 0)
+                    if (Physics.CapsuleCast(point1,point2+Vector3.up*stepOffset,radius*radiusScale,movementDirection,out hitInfo,Mathf.Max(raycastHitArray[i].normal.y,movementSpeed*Time.fixedDeltaTime),environmentLayerMask.value) || raycastHitArray[i].normal.y < 0)
                     {
-                        if (raycastHitArray[i].collider.Equals(hitInfo.collider) || raycastHitArray[i].collider == null)
+                        if (raycastHitArray[i].transform == null || raycastHitArray[i].collider.gameObject.Equals(hitInfo.collider.gameObject))
                         {
                             movementDirection -= Vector3.Project(movementDirection, Vector3.Scale(raycastHitArray[i].normal,new Vector3(1,0,1)).normalized);
                             break; 
