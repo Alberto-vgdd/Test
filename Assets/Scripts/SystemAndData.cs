@@ -2,15 +2,20 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public static class SystemAndData 
+public class SystemAndData
 {
+    
+    // Layer Masks
+    public static LayerMask EnvironmentLayerMask = LayerMask.GetMask("Environment");
 
     // Variables to lock enemies
     public static bool IsEnemyLocked;
     public static Transform LockedEnemyTransform;
 
-    // Player and Camera Transform
+    // Player Transform
     public static Transform PlayerTransform;
+
+    // Player Camera
     public static Camera PlayerCamera;
 
     // Camera Transform and Scripts
@@ -36,5 +41,7 @@ public static class SystemAndData
     public static float GetVerticalCameraInput(){    return InputManagerScript.GetVerticalCameraInput();}
     public static bool GetLockOnButton(){    return InputManagerScript.GetLockOnButton();}
     public static float GetChangeTarget(){		return InputManagerScript.GetChangeTarget();}
+
+    
 
 }
