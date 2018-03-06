@@ -11,6 +11,7 @@ public class InputManagerScript : MonoBehaviour
 	public string m_VerticalCameraMovementKeyboard;
 	public string m_LockOnKeyboard;
 	public string m_ChangeTargetKeyboard;
+	public string jumpKeyboard;
 
 
 
@@ -21,6 +22,7 @@ public class InputManagerScript : MonoBehaviour
 	public string m_VerticalCameraMovementJoystick;
 	public string m_LockOnJoystick;
 	public string m_ChangeTargetJoystick;
+	public string jumpJoystick;
 
 
 	[Header("Movement Axes variables")]
@@ -29,6 +31,7 @@ public class InputManagerScript : MonoBehaviour
 	private float verticalInputCurrentVelocity;
 
 	// Variables the other scripts are going to use
+	[Header("Debug Variables")]
 	public bool m_JoystickInUse;
 	private bool m_LockOnButton;
 	private float m_ChangeTarget;
@@ -36,6 +39,7 @@ public class InputManagerScript : MonoBehaviour
 	private float m_VerticalInput;
 	private float m_HorizontalCameraInput;
 	private float m_VerticalCameraInput;
+	private bool jumpButtonDown;
 
 
 
@@ -56,6 +60,7 @@ public class InputManagerScript : MonoBehaviour
 			m_VerticalInput = Mathf.SmoothDamp(m_VerticalInput, Input.GetAxis(m_VerticalMovementJoystick),ref verticalInputCurrentVelocity, movementAxesSmoothTime);
 			m_HorizontalCameraInput = Input.GetAxis(m_HorizontalCameraMovementJoystick);
 			m_VerticalCameraInput = Input.GetAxis(m_VerticalCameraMovementJoystick);
+			jumpButtonDown = Input.GetButtonDown(jumpJoystick);
 		}
 		else
 		{
@@ -65,6 +70,7 @@ public class InputManagerScript : MonoBehaviour
 			m_VerticalInput = Input.GetAxis(m_VerticalMovementKeyboard);
 			m_HorizontalCameraInput = Input.GetAxis(m_HorizontalCameraMovementKeyboard);
 			m_VerticalCameraInput = Input.GetAxis(m_VerticalCameraMovementKeyboard);
+			jumpButtonDown = Input.GetButtonDown(jumpKeyboard);
 		}
 
 	}
@@ -78,7 +84,8 @@ public class InputManagerScript : MonoBehaviour
 			Input.GetAxis(m_HorizontalCameraMovementKeyboard) != 0.0f ||
 			Input.GetAxis(m_VerticalCameraMovementKeyboard) != 0.0f ||
 			Input.GetAxis(m_HorizontalMovementKeyboard) != 0.0f ||
-			Input.GetAxis(m_VerticalMovementKeyboard) != 0.0f)
+			Input.GetAxis(m_VerticalMovementKeyboard) != 0.0f ||
+			Input.GetButton(jumpKeyboard))
 			{
 				return false;
 			}
@@ -132,4 +139,5 @@ public class InputManagerScript : MonoBehaviour
     public float GetVerticalCameraInput(){    return m_VerticalCameraInput;}
     public bool GetLockOnButton(){    return m_LockOnButton;}
 	public float GetChangeTarget(){		return m_ChangeTarget;}
+	public bool GetJumpButtonDown(){	return jumpButtonDown;}
 }

@@ -5,10 +5,9 @@ using UnityEngine;
 public class TODO
 {
     // CAMERA & LOCK-ON
-    //     2    Release lock-on if the enemy stays 2 secs behind a wall.
+    //     3    Release lock-on if the enemy stays 2 secs behind a wall.
     // PLAYER MOVEMENT SCRIPT
-    //     1    Fix step climbing bug (Perhaps the character casts the ray right before constraining the movement?)
-
-    // *Find a vscode alternative.
-    
+    //     2    Tweak "playerJumping":
+                    // if playerJumping during the first frames of the jump, the character lands too quick into ramps
+    //     1    Tweak the first capsulecast to avoid random slides on terrain ground
 }

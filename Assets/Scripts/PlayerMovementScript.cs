@@ -8,13 +8,13 @@ public class PlayerMovementScript : MonoBehaviour
     [Header("General Movement Parameters")]
     [Tooltip("Maximum speed the character can achieve.")]
     public float maximumMovementSpeed = 4f;
-    [Tooltip("Necessary seconds to perform a 360 degree turn.")]
-    public float turnSmoothTime = 0.075f;
+    [Tooltip("The speed measured in Degrees/seconds.")]
+    public float turnSpeed = 720f;
     [Tooltip("Multiplier value used to increase or decrease the gravity effect.")]
     public float gravityScale = 2f;
 
     [Header("Step Climbing")]
-    [Tooltip("Maximum step height the character can climb to.")]
+    [Tooltip("Maximum step height the character can climb to. (THIS VALE MUST BE EQUAL TO THE CAPSULE COLLIDER'S RADIUS)")]
     public float stepMaxHeight = 0.25f;
     [Tooltip("Minimum free of collider depth that a step must have on top to be climbable.")]
     public float stepMinDepth = 0.4f;
@@ -31,6 +31,7 @@ public class PlayerMovementScript : MonoBehaviour
     // Movement Axes for the player. M = V + H
     Transform cameraTransform;
     Vector2 movementInput;
+    bool jumpInput;
     Vector3 movementDirection;
     Vector3 horizontalDirection;
     Vector3 verticalDirection;
@@ -41,12 +42,16 @@ public class PlayerMovementScript : MonoBehaviour
     Vector3 point1;
     Vector3 point2;
     float radius;
-    float radiusScale = 0.99f;
-    bool playerGrounded;
-    bool playerSliding;
+    float radiusScale = 0.95f;
+
+    public bool playerCloseToGround;
+    public bool playerJumping;
+    public bool playerSliding;
+    public bool playerGrounded;
+
     Vector3 floorNormal;
-    float slideTime = 0.2f;
-    float slideTimer = -1f;
+    float slopeAngle;
+
     
 
     // Player variables
@@ -105,7 +110,12 @@ public class PlayerMovementScript : MonoBehaviour
 
         movementDirection = horizontalDirection * movementInput.x + verticalDirection * movementInput.y;
 
-       
+        // Jump Input
+        if (SystemAndData.GetJumpButtonDown()) 
+        {
+            jumpInput = true;
+        }
+
 
         //Rotate the player (Why is this here? Because unity can't interpolate rotations in no-kinematic objects).
         if (playerRigidbody.velocity.magnitude > 0f)
@@ -114,7 +124,7 @@ public class PlayerMovementScript : MonoBehaviour
             
             if (playerSliding)
             {
-                playerRigidbody.MoveRotation( Quaternion.RotateTowards(playerRigidbody.rotation,Quaternion.LookRotation(velocityDirection,Vector3.up),(360/turnSmoothTime/2)*Time.deltaTime) );
+                playerRigidbody.MoveRotation( Quaternion.RotateTowards(playerRigidbody.rotation,Quaternion.LookRotation(velocityDirection,Vector3.up),turnSpeed*2*Time.deltaTime) );
             }
             else
             {
@@ -124,36 +134,24 @@ public class PlayerMovementScript : MonoBehaviour
                     {
                         if( Vector3.Angle(playerTransform.forward,velocityDirection) > 135)
                         {
-                            playerRigidbody.MoveRotation( Quaternion.RotateTowards(playerRigidbody.rotation,Quaternion.LookRotation(velocityDirection,Vector3.up),(360/turnSmoothTime/2)*Time.deltaTime) );
+                            playerRigidbody.MoveRotation( Quaternion.RotateTowards(playerRigidbody.rotation,Quaternion.LookRotation(velocityDirection,Vector3.up),turnSpeed*2*Time.deltaTime ));
                         }
                         else
                         {
-                            playerRigidbody.MoveRotation( Quaternion.RotateTowards(playerRigidbody.rotation,Quaternion.LookRotation(velocityDirection,Vector3.up),(360/turnSmoothTime)*Time.deltaTime) );
+                            playerRigidbody.MoveRotation( Quaternion.RotateTowards(playerRigidbody.rotation,Quaternion.LookRotation(velocityDirection,Vector3.up),turnSpeed*Time.deltaTime) );
                         }
                     }
                 }
                 else
                 {
-                    playerRigidbody.MoveRotation( Quaternion.RotateTowards(playerRigidbody.rotation,Quaternion.LookRotation(velocityDirection,Vector3.up),(360/turnSmoothTime)*Time.deltaTime) );
+                    playerRigidbody.MoveRotation( Quaternion.RotateTowards(playerRigidbody.rotation,Quaternion.LookRotation(velocityDirection,Vector3.up),turnSpeed*Time.deltaTime) );
                 }
             }      
         }
 
-        //This is used to make the player slide ONLY when it has been on a slope for more than Xs
-        if (slideTimer >= 0f)
-        {
-            if (slideTimer >= slideTime)
-            {
-                playerSliding = true;
-            }
-            else
-            {
-                slideTimer += Time.deltaTime;
-            }
-        }
 
         // Animations
-        playerAnimator.SetBool("Fall", !playerGrounded);
+        playerAnimator.SetBool("Fall", !playerCloseToGround);
         playerAnimator.SetBool("Slide", playerSliding);
         playerAnimator.SetFloat("Walk Speed",movementInput.magnitude );  
 
@@ -163,104 +161,131 @@ public class PlayerMovementScript : MonoBehaviour
 
     void FixedUpdate()
     {
+
         // This is used to update variables for the capsule casts.
         UpdatePlayerCapsulePosition();
 
         // CapsuleCast Below the player to determine the grounded/sliding state
-        capsulecastHitArray = CapsuleCastFromPlayer(Vector3.down, Mathf.Abs(Mathf.Min(playerRigidbody.velocity.y*Time.fixedDeltaTime,-stepMaxHeight)),environmentLayerMask.value);
+        capsulecastHitArray = CapsuleCastFromPlayer(radiusScale,Vector3.down, Mathf.Abs(Mathf.Min(playerRigidbody.velocity.y*Time.fixedDeltaTime,-radius)),environmentLayerMask.value);
 
 
         // If the player is grounded asume the player is sliding too
         if (capsulecastHitArray.Length > 0 ) 
-        {
-            playerGrounded = true; 
+        {   
+            playerGrounded = false;     
+            playerCloseToGround = true; 
             playerSliding = true;
-
-            // For every hit in raycastHitArray from the furthest away to the closest, check if it is not a slope.
-            for (int i = capsulecastHitArray.Length-1; i >= 0; i--)
-            {
             
+            // Character has landed.
+            if (playerJumping && playerRigidbody.velocity.y < 0)
+            {
+                playerJumping = false;
+            }
+
+            // For every hit in raycastHitArray from the closest to the furthest, check if it is not a slope.
+            for (int i = 0; i<capsulecastHitArray.Length; i++)
+            {
+                if (capsulecastHitArray[i].distance < 0.05f)
+                {
+                    playerGrounded = true;
+
+                    if (Vector3Equal(capsulecastHitArray[i].point,Vector3.zero))
+                    {
+                        Debug.Log("Random Slide Problems");
+                        continue;
+                    }
+                }
+
                 // Using hit.normal returns the COLLISION'S NORMAL. (To avoid problems when falling I've used a timer.)
                 floorNormal = capsulecastHitArray[i].normal;
+                slopeAngle = Vector3.Angle(floorNormal, Vector3.up);
 
                 // Check if the ground's surface isn't a slope and the normal isn't "pointing downwards"
-                if (Vector3.Angle(capsulecastHitArray[i].normal, Vector3.up) <= steepSlopeAngle && capsulecastHitArray[i].normal.y > 0 )
+                if ( slopeAngle <= steepSlopeAngle && floorNormal.y > 0 )
                 {
                     playerSliding = false;
-                    slideTimer = -1f;
+                    break;
+                }
+                // This raycast avoid sliding when the character is close to the edge of a slope, except when the character is already sliding.
+                else if (!Physics.Raycast(point2,Vector3.down,radius+stepMaxHeight,environmentLayerMask.value))
+                {
+                    playerSliding = false;
                     break;
                 }
             }
-            
-            // If the player is about to slide, don't make it slide until a timer completes without interrumptions to avoid problems with the collision normals.
-            if (playerSliding && slideTimer < 0f)
-            {
-                playerSliding = false;
-                slideTimer = 0f;
-            }
-
-            
-
         }
         else
         {
-            playerGrounded = false; 
+            playerGrounded = false;
+            playerCloseToGround = false; 
             playerSliding = false;
-            slideTimer = -1f;
+            playerJumping = false;
             floorNormal = Vector3.up;
+            slopeAngle = 0f;
+            
         }
 
-        // //If the player is on a steep, adjust the movement direction.
-        if (!Vector3Equal(floorNormal,Vector3.up))
-        {
-            movementDirection = Vector3.ProjectOnPlane(movementDirection, floorNormal);
-        }
 
+        // Project movementDirection on the floor's normal
+        ProjectMovementDirection();
 
         // CapsuleCast in the direction of the movement, to avoid the player to stick on walls and avoid small terrain variations.
         if (!Vector3Equal(movementDirection, Vector3.zero))
         {
+            capsulecastHitArray = CapsuleCastFromPlayer(radiusScale,movementDirection,maximumMovementSpeed*Time.fixedDeltaTime,environmentLayerMask.value);
             
-            capsulecastHitArray = CapsuleCastFromPlayer(movementDirection,maximumMovementSpeed*Time.fixedDeltaTime,environmentLayerMask.value);
+
 
             // This value is used to keep the movementSpeed after constraining the direction.
             float oldMovementMagnitude = movementDirection.magnitude;
 
             foreach (RaycastHit capsulecastHit in capsulecastHitArray)
             {
-               
                 //For colliders that overlap the capsule at the start of the sweep, to avoid problems.
                 if (Vector3Equal(Vector3.zero,capsulecastHit.point))
                 {
                     continue;
                 }
 
-
                 // If the angle is correct...
                 if ( Vector3.Angle(capsulecastHit.normal, Vector3.up) > steepSlopeAngle )
                 {
-                    // ...and another capsule collider hits the same object, or the normal is "pointing downwards"
-                    RaycastHit hitInfo;
-                    if (Physics.CapsuleCast(point1,point2+Vector3.up*stepMaxHeight,radius,movementDirection,out hitInfo,Mathf.Max(capsulecastHit.normal.y,stepMinDepth),environmentLayerMask.value) || capsulecastHit.normal.y < 0)
+                    
+                    // ...and another capsule collider hits any object, or the hit height is not allowed ,or the normal is "pointing downwards"
+                    float distanceToGround = capsulecastHit.point.y - (point2.y -radius);
+                    if (Physics.CapsuleCast(point1+Vector3.up*stepMaxHeight,point2+Vector3.up*stepMaxHeight,radius,movementDirection,Mathf.Max(capsulecastHit.normal.y,stepMinDepth),environmentLayerMask.value) || distanceToGround > stepMaxHeight || capsulecastHit.normal.y < 0)
                     {
-                        if (hitInfo.transform == null || capsulecastHit.collider.gameObject.Equals(hitInfo.collider.gameObject))
-                        {
-                            movementDirection -= Vector3.Project(movementDirection, Vector3.Scale(capsulecastHit.normal,new Vector3(1,0,1)).normalized);
-                            break; 
-  
-                        }
+                        movementDirection -= Vector3.Project(movementDirection, Vector3.Scale(capsulecastHit.normal,new Vector3(1,0,1)).normalized);
+                        // This break is commented because a bug that caused the character to stop when walking from one wall to another
+                        //break; 
                     }
                     else
                     {
-                        playerRigidbody.MovePosition(playerRigidbody.position+Vector3.up*Mathf.Min(capsulecastHit.point.y - (point2.y -radius),stepMaxHeight));
-                        break;
+                        if (playerCloseToGround)
+                        {
+                            playerRigidbody.MovePosition(playerRigidbody.position+Vector3.up*distanceToGround);
+                            playerRigidbody.velocity = new Vector3(playerRigidbody.velocity.x,0f,playerRigidbody.velocity.z);
+                            break;
+                        }
+                        continue;
                     }
-
                 }      
                 else
                 {
-                    //If the gameObject in front isn't a slope or wall, just use its normal as floor normal and exit the loop.
-                    floorNormal = capsulecastHit.normal;
+
+                    if (playerCloseToGround)
+                    {
+
+                        // If the gameObject in front isn't a slope or wall, and the character isn't falling, just use its normal as floor normal.
+                        floorNormal = capsulecastHit.normal;
+                        slopeAngle = Vector3.Angle(floorNormal,Vector3.up);
+
+
+                        // And project the movement Direction Again
+                        ProjectMovementDirection();
+                        
+                    }
+
                     continue;
 
                 }  
@@ -273,61 +298,73 @@ public class PlayerMovementScript : MonoBehaviour
             {
                 movementDirection *= oldMovementMagnitude/movementDirection.magnitude;
             }
+
         }
 
         
-
-
         //Move the player
         playerRigidbody.velocity = movementDirection * maximumMovementSpeed +  Vector3.up*playerRigidbody.velocity.y;
 
-        //If the player is on a slope, adjust the movement direction. If it is on a steep, it should fall.
-        if (!Vector3Equal(floorNormal,Vector3.up))
+        // If the player is grounded, adjust the movement direction. If it is on a steep, it should fall.
+        // If the character is not on a slope, project the velocity anyways to avoid problems.
+        if ( playerCloseToGround && !playerJumping )
         {
-            playerRigidbody.velocity = Vector3.ProjectOnPlane(playerRigidbody.velocity, floorNormal);
+            playerRigidbody.velocity = Vector3.ProjectOnPlane(playerRigidbody.velocity, floorNormal);            
 
             if (playerSliding)
             {  
-                playerRigidbody.velocity = new Vector3(playerRigidbody.velocity.x, Mathf.Min(playerRigidbody.velocity.y, -steepSlidingSpeed), playerRigidbody.velocity.z);
+                playerRigidbody.velocity -= Vector3.Project(playerRigidbody.velocity, Vector3.Scale(floorNormal,new Vector3(1,0,1)).normalized);
+                playerRigidbody.velocity = new Vector3(playerRigidbody.velocity.x,  -steepSlidingSpeed, playerRigidbody.velocity.z);
+
             }
             else
             {
-                //If the user isn't giving any input, prevent the character from sliding.
-                if (movementInput.magnitude < 0.1f)
+                //If the user isn't giving any input, the character is touching the platform, and it isn't on a slope, prevent the character from sliding, .
+                if ( movementInput.magnitude < 0.1f && playerGrounded)
                 {
                     playerRigidbody.velocity = new Vector3(playerRigidbody.velocity.x, Mathf.Max(playerRigidbody.velocity.y, Physics.gravity.magnitude*gravityScale*Time.fixedDeltaTime), playerRigidbody.velocity.z);
                 }
                 //Otherwiswe, clamp the velocity.
                 else
                 {
-                    //playerRigidbody.velocity = Vector3.up*Mathf.Max(playerRigidbody.velocity.y, -Physics.gravity.magnitude*gravityScale*movementSpeed*Time.fixedDeltaTime) + Vector3.ClampMagnitude( new Vector3(playerRigidbody.velocity.x, 0, playerRigidbody.velocity.z),movementSpeed);
                     playerRigidbody.velocity = Vector3.ClampMagnitude(playerRigidbody.velocity,maximumMovementSpeed);
                 }
             }
         }
     	
-       
         
         //Add gravity the player.
         playerRigidbody.AddForce(Physics.gravity*gravityScale,ForceMode.Acceleration);
-    
+
+        // TEST JUMP
+        if (jumpInput && playerCloseToGround && !playerSliding )
+        {
+            playerRigidbody.velocity = new Vector3(playerRigidbody.velocity.x,7.5f,playerRigidbody.velocity.z);
+            playerJumping = true;
+        }
+        jumpInput = false;
         
     }
 
     void UpdatePlayerCapsulePosition()
     {
-        point1 = playerRigidbody.position + playerCapsuleCollider.center + playerTransform.up *( playerCapsuleCollider.height / 2 -radius);
-        point2 = playerRigidbody.position + playerCapsuleCollider.center - playerTransform.up *( playerCapsuleCollider.height / 2 -radius);
+        point1 = playerRigidbody.position + playerCapsuleCollider.center + playerTransform.up *( playerCapsuleCollider.height / 2 - radius );
+        point2 = playerRigidbody.position + playerCapsuleCollider.center - playerTransform.up *( playerCapsuleCollider.height / 2 - radius);
     }
 
-    RaycastHit[] CapsuleCastFromPlayer(Vector3 direction, float distance, int layerMask)
+    RaycastHit[] CapsuleCastFromPlayer(float radiusScale,Vector3 direction, float distance, int layerMask)
     {
         return Physics.CapsuleCastAll(point1,point2, radius*radiusScale, direction, distance, layerMask);
     }
 
-    public bool Vector3Equal(Vector3 a, Vector3 b)
+    bool Vector3Equal(Vector3 a, Vector3 b)
     {
         return Vector3.SqrMagnitude(a - b) < 0.0001;
+    }
+
+    void ProjectMovementDirection()
+    {
+        movementDirection = Vector3.ProjectOnPlane(movementDirection, floorNormal);
     }
 
 }

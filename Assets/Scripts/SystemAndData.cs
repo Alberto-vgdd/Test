@@ -41,6 +41,7 @@ public class SystemAndData
     public static float GetVerticalCameraInput(){    return InputManagerScript.GetVerticalCameraInput();}
     public static bool GetLockOnButton(){    return InputManagerScript.GetLockOnButton();}
     public static float GetChangeTarget(){		return InputManagerScript.GetChangeTarget();}
+    public static bool GetJumpButtonDown(){		return InputManagerScript.GetJumpButtonDown();}
 
     
 
