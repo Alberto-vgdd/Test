@@ -67,6 +67,9 @@ public class PlayerMovementScript : MonoBehaviour
     void Awake ()
     {
         SystemAndData.PlayerTransform = playerTransform = transform;
+        SystemAndData.PlayerTargetTransform = transform.Find("Target");
+
+
         playerAnimator = playerTransform.GetComponentInChildren<Animator>();
         playerRigidbody = playerTransform.GetComponent<Rigidbody>();
         playerCapsuleCollider = playerTransform.GetComponent<CapsuleCollider>();

@@ -14,12 +14,14 @@ public class SystemAndData
 
     // Player Transform
     public static Transform PlayerTransform;
+    public static Transform PlayerTargetTransform;
 
     // Player Camera
     public static Camera PlayerCamera;
 
     // Camera Transform and Scripts
     public static CameraMovementScript CameraMovementScript;
+    public static Camera2DMovementScript Camera2DMovementScript;
     public static CameraEnemyTrackerScript CameraEnemyTrackerScript;
 
     // Input Manager script
