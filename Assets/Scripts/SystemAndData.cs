@@ -8,6 +8,9 @@ public class SystemAndData
     // Layer Masks
     public static LayerMask EnvironmentLayerMask = LayerMask.GetMask("Environment");
 
+    // Tags
+    public const string PlayerTag = "Player";
+
     // Variables to lock enemies
     public static bool IsEnemyLocked;
     public static Transform LockedEnemyTransform;

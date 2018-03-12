@@ -9,18 +9,18 @@ public class Camera2DMovementScript : MonoBehaviour
 	public Transform playerTarget;
 	public Transform cameraTransform;
 
-	[Header("Camera Parameters")]
-	public float targetDistance = 5f;
-	public float targetHeight = 1.5f;
-	public float targetHoriontalAngle = 180f;
-	public float targetVerticalAngle = 15;
+	// Camera Parameters
+	private float targetDistance;
+	private float targetHeight;
+	private float targetHoriontalAngle;
+	private float targetVerticalAngle;
 
-	[Header("Camera Movement Parameters")]
-	public float cameraFollowSpeedMultiplier = 5f;
-	public float cameraTransitionTime = 2f;
+	// Camera Movement Parameters
+	private float cameraFollowSpeedMultiplier;
+	private float cameraTransitionTime;
 
-	[Header("Clipping Parameters")]
-	public float cameraClippingOffset = 0.05f;
+	// Clipping Parameters
+	private float cameraClippingOffset;
 
 
 	// Transforms to manage the camera rotations.
@@ -63,9 +63,21 @@ public class Camera2DMovementScript : MonoBehaviour
 	}
 	
 
-
-	void OnEnable ()
+	void OnDisable()
 	{
+		centerCamera = false;
+	}
+	
+	public void SetUp (float targetDistance,float targetHeight,float targetHorizontalAngle, float targetVerticalAngle, float cameraFollowSpeedMultiplier, float cameraTransitionTime, float cameraClippingOffset )
+	{
+		this.targetDistance = targetDistance;
+		this.targetHeight = targetHeight;
+		this.targetHoriontalAngle = targetHorizontalAngle;
+		this.targetVerticalAngle = targetVerticalAngle;
+		this.cameraFollowSpeedMultiplier = cameraFollowSpeedMultiplier;
+		this.cameraTransitionTime = cameraTransitionTime;
+		this.cameraClippingOffset = cameraClippingOffset;
+
 		StartCameraTransition();
 	}
 	

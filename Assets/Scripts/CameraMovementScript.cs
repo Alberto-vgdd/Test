@@ -127,6 +127,12 @@ public class CameraMovementScript : MonoBehaviour
 		StartCameraTransition();
 	}
 
+	void OnDisable()
+	{
+		resetCamera = false;
+		centerCamera = false;
+	}
+
 	public void StartCameraTransition()
 	{
 		centerCamera = false;
@@ -135,8 +141,9 @@ public class CameraMovementScript : MonoBehaviour
 		{
 			resetCamera = true;
 			resetCameraTimer = 0f;
-
-			playerHorizontalAngle = playerTarget.eulerAngles.y;
+			// Target where the player is looking
+			//playerHorizontalAngle = playerTarget.eulerAngles.y;
+			playerHorizontalAngle = cameraHorizontalPivot.eulerAngles.y;
 
 			previousCameraPosition = cameraTransform.localPosition;
 			previousHorizontalQuaternion = cameraHorizontalPivot.rotation;
