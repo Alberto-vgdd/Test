@@ -24,13 +24,16 @@ public class CameraEnemyTrackerScript : MonoBehaviour
     void Awake()
     {
         // Reference to GlobalData 
-        SystemAndData.CameraEnemyTrackerScript = this;
-        SystemAndData.PlayerCamera = m_PlayerCamera = GetComponent<Camera>();
+        GlobalData.CameraEnemyTrackerScript = this;
         
         // Clear the enemy array.
         m_LockableEnemies = new List<Transform>();
     }
 
+    void Start()
+    {
+        m_PlayerCamera = GlobalData.PlayerCamera;
+    }
 	void LateUpdate () 
     {
         UpdateLockOn();
@@ -38,7 +41,7 @@ public class CameraEnemyTrackerScript : MonoBehaviour
 
     void FixedUpdate()
     {
-        if (SystemAndData.IsEnemyLocked)
+        if (GlobalData.IsEnemyLocked)
         {
             m_TimeSinceLastRefresh += Time.fixedDeltaTime;
             if (m_TimeSinceLastRefresh >= m_FixedStepMultiplier*Time.fixedDeltaTime)
@@ -53,9 +56,9 @@ public class CameraEnemyTrackerScript : MonoBehaviour
     void UpdateLockOn()
     {
     
-        if (SystemAndData.GetLockOnButton())
+        if (!GlobalData.PlayerCamera && GlobalData.GetLockOnButton())
         {
-            if (SystemAndData.IsEnemyLocked)
+            if (GlobalData.IsEnemyLocked)
             {
                 UnlockEnemy();
                 
@@ -67,11 +70,11 @@ public class CameraEnemyTrackerScript : MonoBehaviour
             }
         }
 
-        if (SystemAndData.IsEnemyLocked && m_LockableEnemies.Count == 0)
+        if (GlobalData.IsEnemyLocked && m_LockableEnemies.Count == 0)
         {
             UnlockEnemy();
         }
-        else if (SystemAndData.IsEnemyLocked && !m_LockableEnemies.Contains(SystemAndData.LockedEnemyTransform))
+        else if (GlobalData.IsEnemyLocked && !m_LockableEnemies.Contains(GlobalData.LockedEnemyTransform))
         {
             UnlockEnemy();
         }
@@ -82,8 +85,8 @@ public class CameraEnemyTrackerScript : MonoBehaviour
     // This code realeses the enemey locked on.
     void UnlockEnemy()
     {
-        SystemAndData.LockedEnemyTransform = null;
-        SystemAndData.IsEnemyLocked = false;
+        GlobalData.LockedEnemyTransform = null;
+        GlobalData.IsEnemyLocked = false;
     }
 
     // Function that locks on the closest enemy available. If there are no enemies available, just center the camera.
@@ -99,26 +102,26 @@ public class CameraEnemyTrackerScript : MonoBehaviour
                 enemyDistance = Vector3.Distance(m_PlayerTransform.position,enemy.position);
                 if (closestDistance > enemyDistance)
                 {
-                    if (!Physics.Raycast(enemy.position,m_PlayerTransform.position - enemy.position , Vector3.Distance(SystemAndData.PlayerTransform.position,enemy.position), (1 << LayerMask.NameToLayer("Environment"))))
+                    if (!Physics.Raycast(enemy.position,m_PlayerTransform.position - enemy.position , Vector3.Distance(GlobalData.PlayerTransform.position,enemy.position), (1 << LayerMask.NameToLayer("Environment"))))
                     {
                         closestDistance = enemyDistance;
-                        SystemAndData.LockedEnemyTransform = enemy;
+                        GlobalData.LockedEnemyTransform = enemy;
                     }
                 }
             }
 
-            if (SystemAndData.LockedEnemyTransform != null)
+            if (GlobalData.LockedEnemyTransform != null)
             {
-                SystemAndData.IsEnemyLocked = true;
+                GlobalData.IsEnemyLocked = true;
             }
             else
             {
-                SystemAndData.CenterCamera();
+                GlobalData.CenterCamera();
             }
         }
         else
         {
-            SystemAndData.CenterCamera();
+            GlobalData.CenterCamera();
         }
     }
 
@@ -126,7 +129,7 @@ public class CameraEnemyTrackerScript : MonoBehaviour
     void RefreshNearEnemies()
     {
         m_LockableEnemies = new List<Transform>();
-        m_NearbyEnemyColliders =  Physics.OverlapSphere(SystemAndData.PlayerTransform.position,m_MaximumLockDistance,(1 << LayerMask.NameToLayer("Enemies")));
+        m_NearbyEnemyColliders =  Physics.OverlapSphere(GlobalData.PlayerTransform.position,m_MaximumLockDistance,(1 << LayerMask.NameToLayer("Enemies")));
        
         foreach(Collider enemyCollider in m_NearbyEnemyColliders)
         {
@@ -138,14 +141,14 @@ public class CameraEnemyTrackerScript : MonoBehaviour
     // Move to the closest enemy on the screen (given the direction)
     public void ChangeLockOn(float input)
     {
-        Transform newLockedEnemy = SystemAndData.LockedEnemyTransform;
+        Transform newLockedEnemy = GlobalData.LockedEnemyTransform;
         float DistanceToPreviousEnemy = 999*Mathf.Sign(input);
         
         if (Mathf.Sign(input) > 0)
         {
             foreach(Transform enemy in m_LockableEnemies)
             {
-                if (m_PlayerCamera.WorldToViewportPoint(SystemAndData.LockedEnemyTransform.position).x < m_PlayerCamera.WorldToViewportPoint(enemy.position).x && m_PlayerCamera.WorldToViewportPoint(enemy.position).x < DistanceToPreviousEnemy )
+                if (m_PlayerCamera.WorldToViewportPoint(GlobalData.LockedEnemyTransform.position).x < m_PlayerCamera.WorldToViewportPoint(enemy.position).x && m_PlayerCamera.WorldToViewportPoint(enemy.position).x < DistanceToPreviousEnemy )
                 {
                     newLockedEnemy = enemy;
                     DistanceToPreviousEnemy = m_PlayerCamera.WorldToViewportPoint(enemy.position).x;
@@ -156,7 +159,7 @@ public class CameraEnemyTrackerScript : MonoBehaviour
         {
             foreach(Transform enemy in m_LockableEnemies)
             {
-                if (m_PlayerCamera.WorldToViewportPoint(SystemAndData.LockedEnemyTransform.position).x > m_PlayerCamera.WorldToViewportPoint(enemy.position).x && m_PlayerCamera.WorldToViewportPoint(enemy.position).x > DistanceToPreviousEnemy )
+                if (m_PlayerCamera.WorldToViewportPoint(GlobalData.LockedEnemyTransform.position).x > m_PlayerCamera.WorldToViewportPoint(enemy.position).x && m_PlayerCamera.WorldToViewportPoint(enemy.position).x > DistanceToPreviousEnemy )
                 {
                     newLockedEnemy = enemy;
                     DistanceToPreviousEnemy = m_PlayerCamera.WorldToViewportPoint(enemy.position).x;
@@ -164,7 +167,7 @@ public class CameraEnemyTrackerScript : MonoBehaviour
             }
         }
 
-        SystemAndData.LockedEnemyTransform = newLockedEnemy;
+        GlobalData.LockedEnemyTransform = newLockedEnemy;
     }
 
 }

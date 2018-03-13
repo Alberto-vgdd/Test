@@ -45,7 +45,7 @@ public class InputManagerScript : MonoBehaviour
 
 	void Start () 
 	{
-		SystemAndData.InputManagerScript = this;
+		GlobalData.InputManagerScript = this;
 	}
 	
 	void Update ()

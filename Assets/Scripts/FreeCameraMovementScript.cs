@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class CameraMovementScript : MonoBehaviour 
+public class FreeCameraMovementScript : MonoBehaviour 
 {
 
 	[Header("Player and Camera Transforms")]
@@ -107,7 +107,7 @@ public class CameraMovementScript : MonoBehaviour
 	void Awake () 
 	{
 		// Reference to GlobalData
-		SystemAndData.CameraMovementScript = this;
+		GlobalData.FreeCameraMovementScript = this;
 
 		// Set camera's transfoms
 		m_Camera = cameraTransform.GetComponent<Camera>();
@@ -166,37 +166,45 @@ public class CameraMovementScript : MonoBehaviour
 
 	void UpdateInputs()
 	{
-		joystickInUse = SystemAndData.GetJoystickInUse();
-
-		if  (!joystickInUse)
+		joystickInUse = GlobalData.GetJoystickInUse();
+		if (!GlobalData.PlayerDeath)
 		{
-				invertHorizontalInput = invertMouseHorizontalInput;
-				invertVerticalInput = invertMouseVerticalInput;
-				cameraSpeed = mouseSensitivity;
+			if  (!joystickInUse)
+			{
+					invertHorizontalInput = invertMouseHorizontalInput;
+					invertVerticalInput = invertMouseVerticalInput;
+					cameraSpeed = mouseSensitivity;
+			}
+			else
+			{
+					invertHorizontalInput = invertJoystickHorizontalInput;
+					invertVerticalInput = invertJoystickVerticalInput;
+					cameraSpeed = joystickSensitivy*Time.deltaTime;
+			}
+			changeTargetInput = GlobalData.GetChangeTarget();changeTargetInput *= (invertHorizontalInput)? -1f:1f;
+			horizontalInput = GlobalData.GetHorizontalCameraInput(); horizontalInput *= (invertHorizontalInput)? -1f:1f;
+			verticalInput = GlobalData.GetVerticalCameraInput(); verticalInput *= (invertVerticalInput)? -1f:1f;
 		}
 		else
 		{
-				invertHorizontalInput = invertJoystickHorizontalInput;
-				invertVerticalInput = invertJoystickVerticalInput;
-				cameraSpeed = joystickSensitivy*Time.deltaTime;
+			changeTargetInput = 0f;
+			horizontalInput = 0f;
+			verticalInput = 0f;
 		}
-		changeTargetInput = SystemAndData.GetChangeTarget();changeTargetInput *= (invertHorizontalInput)? -1f:1f;
-		horizontalInput = SystemAndData.GetHorizontalCameraInput(); horizontalInput *= (invertHorizontalInput)? -1f:1f;
-		verticalInput = SystemAndData.GetVerticalCameraInput(); verticalInput *= (invertVerticalInput)? -1f:1f;
 	}
 
 	void RotateAroundPlayer()
 	{
 		
 
-		if (SystemAndData.IsEnemyLocked)
+		if (GlobalData.IsEnemyLocked)
 		{
 			
 			// If any input has been recieved, the lock on will be moved to another enemy.
 			ChangeLockOn();
 			
 			// Manage Horizontal camera movement: Create a enemy to camera Vec3 with no height displacement. If the vector is 0, use the camera forward to avoid Quaternion problems.
-			cameraToEnemy = SystemAndData.LockedEnemyTransform.position - cameraHorizontalPivot.position; cameraToEnemy.y = 0;
+			cameraToEnemy = GlobalData.LockedEnemyTransform.position - cameraHorizontalPivot.position; cameraToEnemy.y = 0;
 			if (cameraToEnemy == Vector3.zero) { cameraToEnemy = cameraHorizontalPivot.forward;}
 
 			// Manage Vertical camera movement
@@ -289,7 +297,10 @@ public class CameraMovementScript : MonoBehaviour
 
 	void FollowPlayer()
 	{
-		cameraHorizontalPivot.position = Vector3.Lerp(cameraHorizontalPivot.position,playerTarget.position,cameraFollowSpeedMultiplier*Time.deltaTime);
+		if (!GlobalData.PlayerDeath)
+		{
+			cameraHorizontalPivot.position = Vector3.Lerp(cameraHorizontalPivot.position,playerTarget.position,cameraFollowSpeedMultiplier*Time.deltaTime);
+		}
 	}
 
 	public void CenterCamera()
@@ -312,7 +323,7 @@ public class CameraMovementScript : MonoBehaviour
 	{
 		if( Mathf.Abs(changeTargetInput) > 0f && !cameraLockOnAxisInUse)
 		{
-			SystemAndData.ChangeLockOn(changeTargetInput);
+			GlobalData.ChangeLockOn(changeTargetInput);
 			cameraLockOnAxisInUse = true;
 		}
 		if( changeTargetInput == 0f)

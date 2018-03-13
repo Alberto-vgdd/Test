@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Camera2DMovementScript : MonoBehaviour 
+public class FixedCameraMovementScript : MonoBehaviour 
 {
 
 	[Header("Player and Camera Transforms")]
@@ -49,7 +49,7 @@ public class Camera2DMovementScript : MonoBehaviour
 	void Awake () 
 	{
 		// Reference to GlobalData
-		SystemAndData.Camera2DMovementScript = this;
+		GlobalData.FixedCameraMovementScript = this;
 
 		// Set the camera's transforms. 
 		cameraVerticalPivot = cameraTransform.parent;
@@ -77,9 +77,8 @@ public class Camera2DMovementScript : MonoBehaviour
 		this.cameraFollowSpeedMultiplier = cameraFollowSpeedMultiplier;
 		this.cameraTransitionTime = cameraTransitionTime;
 		this.cameraClippingOffset = cameraClippingOffset;
-
-		StartCameraTransition();
 	}
+
 	
 	void LateUpdate () 
 	{
@@ -115,7 +114,10 @@ public class Camera2DMovementScript : MonoBehaviour
 
 	void FollowPlayer()
 	{
-		cameraHorizontalPivot.position = Vector3.Lerp(cameraHorizontalPivot.position,playerTarget.position,cameraFollowSpeedMultiplier*Time.deltaTime);
+		if (!GlobalData.PlayerDeath)
+		{
+			cameraHorizontalPivot.position = Vector3.Lerp(cameraHorizontalPivot.position,playerTarget.position,cameraFollowSpeedMultiplier*Time.deltaTime);
+		}
 	}
 
 	public void StartCameraTransition()

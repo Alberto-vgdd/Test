@@ -12,7 +12,11 @@ public class PlayerMovementScript : MonoBehaviour
     public float turnSpeed = 720f;
     [Tooltip("Multiplier value used to increase or decrease the gravity effect.")]
     public float gravityScale = 2f;
+    [Tooltip("Vertical speed asigned to the player when jumping.")]
     public float jumpSpeed = 7.5f;
+    [Tooltip("Maximum speed the character reach get to while falling.")]
+    public float maximumFallingSpeed = 10f;
+
 
     [Header("Step Climbing")]
     [Tooltip("Maximum step height the character can climb to. (THIS VALE MUST BE EQUAL TO THE CAPSULE COLLIDER'S RADIUS)")]
@@ -58,7 +62,7 @@ public class PlayerMovementScript : MonoBehaviour
     private Animator playerAnimator;
     private Rigidbody playerRigidbody;
     private CapsuleCollider playerCapsuleCollider;
-    private Transform playerTransform;
+    private ParticleSystem landingParticles;
 
 
 
@@ -66,20 +70,17 @@ public class PlayerMovementScript : MonoBehaviour
     // Use this for initialization
     void Awake ()
     {
-        SystemAndData.PlayerTransform = playerTransform = transform;
-        SystemAndData.PlayerTargetTransform = transform.Find("Target");
-
-
-        playerAnimator = playerTransform.GetComponentInChildren<Animator>();
-        playerRigidbody = playerTransform.GetComponent<Rigidbody>();
-        playerCapsuleCollider = playerTransform.GetComponent<CapsuleCollider>();
+        landingParticles = transform.Find("Particle System").GetComponent<ParticleSystem>();
+        playerAnimator = transform.GetComponentInChildren<Animator>();
+        playerRigidbody = transform.GetComponent<Rigidbody>();
+        playerCapsuleCollider = transform.GetComponent<CapsuleCollider>();
         radius = playerCapsuleCollider.radius;
     }
 
     void Start()
     {
-        cameraTransform = SystemAndData.PlayerCamera.transform;
-        environmentLayerMask = SystemAndData.EnvironmentLayerMask;
+        cameraTransform = GlobalData.PlayerCamera.transform;
+        environmentLayerMask = GlobalData.EnvironmentLayerMask;
 
         Screen.SetResolution(853, 480, true, 0);
         Application.targetFrameRate = 30;
@@ -89,18 +90,33 @@ public class PlayerMovementScript : MonoBehaviour
 	// Update is called once per frame
 	void Update ()
     {
-        
-        // Update movement input and normalize the vector to avoid diagonal acceleration.
-        movementInput = new Vector2(SystemAndData.GetHorizontalInput(),SystemAndData.GetVerticalInput()) ;
-
-        // m_MovementInput.magnitude?
-        if (Mathf.Abs(movementInput.x)+Mathf.Abs(movementInput.y) > 1 )
+        if (!GlobalData.PlayerDeath)
         {
-            movementInput.Normalize();
+            // Update movement input and normalize the vector to avoid diagonal acceleration.
+            movementInput = new Vector2(GlobalData.GetHorizontalInput(),GlobalData.GetVerticalInput()) ;
+
+            // m_MovementInput.magnitude?
+            if (Mathf.Abs(movementInput.x)+Mathf.Abs(movementInput.y) > 1 )
+            {
+                movementInput.Normalize();
+            }
+
+            // Jump Input
+            if (GlobalData.GetJumpButtonDown()) 
+            {
+                jumpInput = true;
+            }
+
+        }
+        else
+        {
+            movementInput = Vector2.zero;
+            jumpInput = false;
         }
 
+        
         // Update movement directions 
-        if (!SystemAndData.IsEnemyLocked)
+        if (!GlobalData.IsEnemyLocked)
         {
             horizontalDirection = Vector3.Scale(cameraTransform.right, new Vector3(1f, 0f, 1f)).normalized;
             verticalDirection = Vector3.Scale(cameraTransform.forward, new Vector3(1f, 0f, 1f)).normalized;
@@ -108,18 +124,12 @@ public class PlayerMovementScript : MonoBehaviour
         else
         {
 
-            verticalDirection = Vector3.Scale(SystemAndData.LockedEnemyTransform.position - playerTransform.position, new Vector3(1f, 0f, 1f)).normalized;
-            horizontalDirection = Vector3.Cross(verticalDirection, -playerTransform.up).normalized;
+            verticalDirection = Vector3.Scale(GlobalData.LockedEnemyTransform.position - transform.position, new Vector3(1f, 0f, 1f)).normalized;
+            horizontalDirection = Vector3.Cross(verticalDirection, -transform.up).normalized;
         }
 
         movementDirection = horizontalDirection * movementInput.x + verticalDirection * movementInput.y;
-
-        // Jump Input
-        if (SystemAndData.GetJumpButtonDown()) 
-        {
-            jumpInput = true;
-        }
-
+        
 
         //Rotate the player (Why is this here? Because unity can't interpolate rotations in no-kinematic objects).
         if (playerRigidbody.velocity.magnitude > 0f)
@@ -132,11 +142,11 @@ public class PlayerMovementScript : MonoBehaviour
             }
             else
             {
-                if (!SystemAndData.IsEnemyLocked)
+                if (!GlobalData.IsEnemyLocked)
                 {                    
                     if ( movementInput.magnitude > 0.01f && playerRigidbody.velocity.magnitude > 0.01f)
                     {
-                        if( Vector3.Angle(playerTransform.forward,velocityDirection) > 135)
+                        if( Vector3.Angle(transform.forward,velocityDirection) > 135)
                         {
                             playerRigidbody.MoveRotation( Quaternion.RotateTowards(playerRigidbody.rotation,Quaternion.LookRotation(velocityDirection,Vector3.up),turnSpeed*2*Time.deltaTime ));
                         }
@@ -186,6 +196,7 @@ public class PlayerMovementScript : MonoBehaviour
 
         // Set the velocity of the character.
         // If the character is not grounded, prevent velocity.y from increase, to avoid the character"flying" when walking up slopes. (This happens because playerGrounded works with a small offset)
+        // Clamp velocity.y to avoid constant falling acceleration
         SetVelocity();
         
         // If the character is grounded and not jumping, project the velocity to groundNormal.
@@ -196,12 +207,13 @@ public class PlayerMovementScript : MonoBehaviour
         //Add gravity the player.
         playerRigidbody.AddForce(Physics.gravity*gravityScale,ForceMode.Acceleration);
 
+        
     }
 
     void UpdatePlayerCapsulePosition()
     {
-        point1 = playerRigidbody.position + playerCapsuleCollider.center + playerTransform.up *( playerCapsuleCollider.height / 2 - radius );
-        point2 = playerRigidbody.position + playerCapsuleCollider.center - playerTransform.up *( playerCapsuleCollider.height / 2 - radius);
+        point1 = playerRigidbody.position + playerCapsuleCollider.center + transform.up *( playerCapsuleCollider.height / 2 - radius );
+        point2 = playerRigidbody.position + playerCapsuleCollider.center - transform.up *( playerCapsuleCollider.height / 2 - radius);
     }
 
     RaycastHit[] CapsuleCastFromPlayer(float radiusScale,Vector3 direction, float distance, int layerMask)
@@ -310,6 +322,7 @@ public class PlayerMovementScript : MonoBehaviour
             if (playerGrounded)
             {
                 playerJumping = false;
+                landingParticles.Play();
                 return;
             }
         }
@@ -441,7 +454,9 @@ public class PlayerMovementScript : MonoBehaviour
         {
             playerRigidbody.velocity = new Vector3(playerRigidbody.velocity.x,Mathf.Min(velocityY,playerRigidbody.velocity.y),playerRigidbody.velocity.z);
         }
-        
+
+
+        playerRigidbody.velocity = new Vector3(playerRigidbody.velocity.x,Mathf.Max(playerRigidbody.velocity.y,-maximumFallingSpeed),playerRigidbody.velocity.z);
 
     }
 }

@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Camera2DTrigger : MonoBehaviour
+public class FixedCameraTrigger : MonoBehaviour
 {
-	private Camera2DMovementScript camera2D;
-	private CameraMovementScript camera3D;
+	private FixedCameraMovementScript camera2D;
+	private FreeCameraMovementScript camera3D;
 	private string playerTag;
 
 	[Header("Camera Parameters")]
@@ -23,9 +23,9 @@ public class Camera2DTrigger : MonoBehaviour
 
 	void Start () 
 	{
-		camera2D = SystemAndData.Camera2DMovementScript;
-		camera3D = SystemAndData.CameraMovementScript;
-		playerTag = SystemAndData.PlayerTag;
+		camera2D = GlobalData.FixedCameraMovementScript;
+		camera3D = GlobalData.FreeCameraMovementScript;
+		playerTag = GlobalData.PlayerTag;
 	}
 	
 	void OnTriggerEnter(Collider other)
@@ -35,6 +35,7 @@ public class Camera2DTrigger : MonoBehaviour
 			camera3D.enabled = false;
 			camera2D.enabled = true;
 			camera2D.SetUp(targetDistance,targetHeight,targetHoriontalAngle,targetVerticalAngle,cameraFollowSpeedMultiplier,cameraTransitionTime,cameraClippingOffset);
+			camera2D.StartCameraTransition();
 		}
 	}
 }

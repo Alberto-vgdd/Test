@@ -2,8 +2,14 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class SystemAndData
+public class GlobalData
 {
+    //  GameManager variables
+    public static GameManagerScript GameManager;
+    public static bool PlayerDeath;
+
+    // Reference to the GameUJI
+    public static GameUIScript GameUIScript;
     
     // Layer Masks
     public static LayerMask EnvironmentLayerMask = LayerMask.GetMask("Environment");
@@ -15,16 +21,17 @@ public class SystemAndData
     public static bool IsEnemyLocked;
     public static Transform LockedEnemyTransform;
 
-    // Player Transform
+    // Player Transforms
     public static Transform PlayerTransform;
     public static Transform PlayerTargetTransform;
 
     // Player Camera
     public static Camera PlayerCamera;
+    public static Transform PlayerCameraTransform;
 
-    // Camera Transform and Scripts
-    public static CameraMovementScript CameraMovementScript;
-    public static Camera2DMovementScript Camera2DMovementScript;
+    // Camera Scripts
+    public static FreeCameraMovementScript FreeCameraMovementScript;
+    public static FixedCameraMovementScript FixedCameraMovementScript;
     public static CameraEnemyTrackerScript CameraEnemyTrackerScript;
 
     // Input Manager script
@@ -35,7 +42,7 @@ public class SystemAndData
     public static void ChangeLockOn(float input)  {    CameraEnemyTrackerScript.ChangeLockOn(input);  }
 
     // Call the function in the CameraMovementScript
-    public static void CenterCamera(){    CameraMovementScript.CenterCamera();}
+    public static void CenterCamera(){    FreeCameraMovementScript.CenterCamera();}
 
 
     // Call the function in InputManagerScript
