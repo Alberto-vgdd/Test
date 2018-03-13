@@ -48,13 +48,13 @@ public class GameManagerScript : MonoBehaviour
 
 	void Update()
 	{
-		if (Input.GetMouseButtonDown(1))
+		if ( Input.GetMouseButtonDown(0))
 		{
-			StartCoroutine(Die());
+			StartCoroutine(GameOver());
 
 		}
 	}
-	public void SetCheckPoint(Transform newCheckPoint, bool freeCameraEnabled, bool fixedCameraEnabled)
+	public void UpdateCheckPoint(Transform newCheckPoint, bool freeCameraEnabled, bool fixedCameraEnabled)
 	{
 		checkPoint = newCheckPoint;
 		checkPointFreeCameraEnabled = freeCameraEnabled;
@@ -64,7 +64,7 @@ public class GameManagerScript : MonoBehaviour
 
 
 
-	IEnumerator Die()
+	IEnumerator GameOver()
 	{
 		// "Kill" the character
 		GlobalData.PlayerDeath = true;

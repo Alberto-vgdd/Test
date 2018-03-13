@@ -56,7 +56,7 @@ public class CameraEnemyTrackerScript : MonoBehaviour
     void UpdateLockOn()
     {
     
-        if (!GlobalData.PlayerCamera && GlobalData.GetLockOnButton())
+        if (!GlobalData.PlayerDeath && GlobalData.GetLockOnButton())
         {
             if (GlobalData.IsEnemyLocked)
             {

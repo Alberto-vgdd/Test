@@ -17,7 +17,7 @@ public class CheckPointScript : MonoBehaviour
 	{
 		if (!checkPointVisited && other.tag.Equals(playerTag))
 		{
-			GlobalData.GameManager.SetCheckPoint(this.transform, GlobalData.FreeCameraMovementScript.enabled,GlobalData.FixedCameraMovementScript.enabled);
+			GlobalData.GameManager.UpdateCheckPoint(this.transform, GlobalData.FreeCameraMovementScript.enabled,GlobalData.FixedCameraMovementScript.enabled);
 			checkPointVisited = true;
 		}
 	}
