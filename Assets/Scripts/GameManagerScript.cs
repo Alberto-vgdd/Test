@@ -28,7 +28,7 @@ public class GameManagerScript : MonoBehaviour
 
 			GlobalData.PlayerTransform = playerTransform = GameObject.Find("Player").transform;
 			GlobalData.PlayerTargetTransform = playerTransform.Find("Target");
-			GlobalData.PlayerCameraTransform = playerCameraTransform = GameObject.Find("Camera Horizontal Pivot").transform;
+			GlobalData.PlayerCameraHorizontalPivotTransform = playerCameraTransform = GameObject.Find("Camera Horizontal Pivot").transform;
 			GlobalData.PlayerCamera = playerCameraTransform.GetComponentInChildren<Camera>();
 
 			DontDestroyOnLoad(this.gameObject);

@@ -5,9 +5,9 @@ using UnityEngine;
 public class FixedCameraMovementScript : MonoBehaviour 
 {
 
-	[Header("Player and Camera Transforms")]
-	public Transform playerTarget;
-	public Transform cameraTransform;
+	//[Header("Player and Camera Transforms")]
+	private Transform playerTarget;
+	private Transform cameraTransform;
 
 	// Camera Parameters
 	private float targetDistance;
@@ -44,22 +44,31 @@ public class FixedCameraMovementScript : MonoBehaviour
 
 
 
-	// Can't use System and Data because OnEnable() is called before that Start()
-	// Everything related with CenterCamera must be initialized here then.
 	void Awake () 
 	{
 		// Reference to GlobalData
 		GlobalData.FixedCameraMovementScript = this;
 
+		//TEST 
+		Cursor.lockState = CursorLockMode.Locked;
+	}
+
+	void Start()
+	{
+		// Get the transforms from the Global Data
+		playerTarget = GlobalData.PlayerTargetTransform;
+
 		// Set the camera's transforms. 
+		cameraTransform = GlobalData.PlayerCamera.transform;
 		cameraVerticalPivot = cameraTransform.parent;
-		cameraHorizontalPivot = this.transform;
+		cameraHorizontalPivot = cameraVerticalPivot.parent;
 
 		// Place the camera in the desired position
 		cameraHorizontalPivot.position = playerTarget.position;
 
-		//TEST 
-		Cursor.lockState = CursorLockMode.Locked;
+		// Disable this script at the start of the game
+		this.enabled = false;
+
 	}
 	
 	// Stop any possible transition before shutting down the script

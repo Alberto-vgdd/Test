@@ -5,9 +5,9 @@ using UnityEngine;
 public class FreeCameraMovementScript : MonoBehaviour 
 {
 
-	[Header("Player and Camera Transforms")]
-	public Transform playerTarget;
-	public Transform cameraTransform;
+	//[Header("Player and Camera Transforms")]
+	private Transform playerTarget;
+	private Transform cameraTransform;
 
 	[Header("Camera Parameters")]
 	public float targetDistance = 4f;
@@ -101,24 +101,30 @@ public class FreeCameraMovementScript : MonoBehaviour
 	private Vector3 previousCameraPosition;
 
 
-
-	// Can't use System and Data because OnEnable() is called before that Start()
-	// Everything related with FesetCamera must be initialized here then.
 	void Awake () 
 	{
 		// Reference to GlobalData
 		GlobalData.FreeCameraMovementScript = this;
 
+		//TEST 
+		Cursor.lockState = CursorLockMode.Locked;
+	}
+
+	void Start()
+	{
+		// Get the transforms from the Global Data
+		playerTarget = GlobalData.PlayerTargetTransform;
+		m_Camera = GlobalData.PlayerCamera;
+
 		// Set camera's transfoms
-		m_Camera = cameraTransform.GetComponent<Camera>();
-		cameraHorizontalPivot = this.transform;
-		cameraVerticalPivot = cameraTransform.parent;
-		
+		cameraTransform = m_Camera.transform;		
+		cameraVerticalPivot = cameraTransform.parent;	
+		cameraHorizontalPivot = cameraVerticalPivot.parent;	
+
+	
 		// Place the camera in the desired position
 		cameraHorizontalPivot.position = playerTarget.position;
 
-		//TEST 
-		Cursor.lockState = CursorLockMode.Locked;
 
 		// Center the camera at the start of the game (Because the free camera is the default camera script)
 		StartCameraTransition();
