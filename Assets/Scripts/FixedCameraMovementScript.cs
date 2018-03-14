@@ -62,7 +62,7 @@ public class FixedCameraMovementScript : MonoBehaviour
 		Cursor.lockState = CursorLockMode.Locked;
 	}
 	
-
+	// Stop any possible transition before shutting down the script
 	void OnDisable()
 	{
 		centerCamera = false;

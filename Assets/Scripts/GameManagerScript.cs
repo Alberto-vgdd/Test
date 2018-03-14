@@ -46,14 +46,6 @@ public class GameManagerScript : MonoBehaviour
 		gameUIScript = GlobalData.GameUIScript;
 	}
 
-	void Update()
-	{
-		if ( Input.GetMouseButtonDown(0))
-		{
-			StartCoroutine(GameOver());
-
-		}
-	}
 	public void UpdateCheckPoint(Transform newCheckPoint, bool freeCameraEnabled, bool fixedCameraEnabled)
 	{
 		checkPoint = newCheckPoint;
@@ -62,7 +54,10 @@ public class GameManagerScript : MonoBehaviour
 		
 	}
 
-
+	public void StartGameOver()
+	{
+		StartCoroutine(GameOver());
+	}
 
 	IEnumerator GameOver()
 	{
@@ -76,15 +71,17 @@ public class GameManagerScript : MonoBehaviour
 		yield return new WaitForSeconds(1f);
 		playerTransform.position = playerCameraTransform.position = checkPoint.position;
 		playerTransform.rotation = playerCameraTransform.rotation = checkPoint.rotation;
+		
+		// Enable/Disable the camera scripts
+		fixedCameraMovementScript.enabled = checkPointFixedCameraEnabled;
+		freeCameraMovementScript.enabled = checkPointFreeCameraEnabled;
 
 		if (checkPointFixedCameraEnabled)
 		{
-			fixedCameraMovementScript.enabled = true;
 			fixedCameraMovementScript.StartCameraTransition();
 		}
 		if (checkPointFreeCameraEnabled)
 		{
-			freeCameraMovementScript.enabled = true;
 			freeCameraMovementScript.CenterCamera();
 		}
 

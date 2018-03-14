@@ -119,14 +119,12 @@ public class FreeCameraMovementScript : MonoBehaviour
 
 		//TEST 
 		Cursor.lockState = CursorLockMode.Locked;
-	}
 
-	
-	void OnEnable ()
-	{
+		// Center the camera at the start of the game (Because the free camera is the default camera script)
 		StartCameraTransition();
 	}
 
+	// Stop any possible transition before shutting down the script
 	void OnDisable()
 	{
 		resetCamera = false;

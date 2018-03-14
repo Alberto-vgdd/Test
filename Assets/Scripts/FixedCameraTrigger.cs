@@ -30,9 +30,10 @@ public class FixedCameraTrigger : MonoBehaviour
 	
 	void OnTriggerEnter(Collider other)
 	{
-		if (!camera2D.enabled && other.tag.Equals(playerTag))
+		if (!camera2D.enabled && other.CompareTag(playerTag))
 		{
 			camera3D.enabled = false;
+			
 			camera2D.enabled = true;
 			camera2D.SetUp(targetDistance,targetHeight,targetHoriontalAngle,targetVerticalAngle,cameraFollowSpeedMultiplier,cameraTransitionTime,cameraClippingOffset);
 			camera2D.StartCameraTransition();

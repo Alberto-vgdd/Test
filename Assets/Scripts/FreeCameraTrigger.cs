@@ -18,10 +18,12 @@ public class FreeCameraTrigger : MonoBehaviour
 
 	void OnTriggerEnter(Collider other)
 	{
-		if ( !camera3D.enabled && other.tag.Equals(playerTag))
+		if ( !camera3D.enabled && other.CompareTag(playerTag))
 		{
 			camera2D.enabled = false;
+
 			camera3D.enabled = true;
+			camera3D.StartCameraTransition();
 		}
 	}
 }
