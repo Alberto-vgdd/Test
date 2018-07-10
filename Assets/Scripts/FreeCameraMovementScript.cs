@@ -10,7 +10,7 @@ public class FreeCameraMovementScript : MonoBehaviour
 	private Transform cameraTransform;
 
 	[Header("Camera Parameters")]
-	public float targetDistance = 4f;
+	public float targetDistance = 40f;
 	public float targetHeight = 1f;
 	public float maximunmVerticalAngle = 35f;
 	public float minimumVerticalAngle = -25f;
@@ -105,6 +105,8 @@ public class FreeCameraMovementScript : MonoBehaviour
 	{
 		// Reference to GlobalData
 		GlobalData.FreeCameraMovementScript = this;
+		GlobalData.PlayerCamera = Camera.main;
+
 
 		//TEST 
 		Cursor.lockState = CursorLockMode.Locked;
@@ -120,6 +122,8 @@ public class FreeCameraMovementScript : MonoBehaviour
 		cameraTransform = m_Camera.transform;		
 		cameraVerticalPivot = cameraTransform.parent;	
 		cameraHorizontalPivot = cameraVerticalPivot.parent;	
+		
+
 
 	
 		// Place the camera in the desired position
@@ -147,12 +151,14 @@ public class FreeCameraMovementScript : MonoBehaviour
 			resetCameraTimer = 0f;
 			// Target where the player is looking
 			//playerHorizontalAngle = playerTarget.eulerAngles.y;
+			
 			playerHorizontalAngle = cameraHorizontalPivot.eulerAngles.y;
 
 			previousCameraPosition = cameraTransform.localPosition;
 			previousHorizontalQuaternion = cameraHorizontalPivot.rotation;
 			previousVerticalQuaternion = cameraVerticalPivot.localRotation;
 			previousVerticalPosition = cameraVerticalPivot.localPosition;
+
 
 		}
 		
@@ -203,7 +209,7 @@ public class FreeCameraMovementScript : MonoBehaviour
 
 		if (GlobalData.IsEnemyLocked)
 		{
-			
+			cameraDistance = targetDistance;
 			// If any input has been recieved, the lock on will be moved to another enemy.
 			ChangeLockOn();
 			
@@ -237,7 +243,7 @@ public class FreeCameraMovementScript : MonoBehaviour
 			// Rotate the camera
 			cameraHorizontalPivot.rotation = Quaternion.Slerp(previousHorizontalQuaternion,Quaternion.Euler(0,playerHorizontalAngle,0),step);
 			cameraVerticalPivot.localRotation = Quaternion.Slerp(previousVerticalQuaternion,Quaternion.Euler(0,0,0),step);
-	
+
 			horizontalAngle = cameraHorizontalPivot.eulerAngles.y;
 			verticalAngle = cameraVerticalPivot.localEulerAngles.x;
 
@@ -248,6 +254,7 @@ public class FreeCameraMovementScript : MonoBehaviour
 		}
 		else if (centerCamera)
 		{
+			cameraDistance = targetDistance;
 			centerCameraTimer += Time.deltaTime;
 			float step = Mathf.SmoothStep(0,1,centerCameraTimer/centerCameraTime);
 			
@@ -265,6 +272,7 @@ public class FreeCameraMovementScript : MonoBehaviour
 		}
 		else
 		{
+			cameraDistance = targetDistance;
 			// If the user isn't moving the camera while the player is moving, auto rotate the camera with joystick's speed.
             if ( cameraAutoRotation && joystickInUse && horizontalInput ==  0 )
 			{

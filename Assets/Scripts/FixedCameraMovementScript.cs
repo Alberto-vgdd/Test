@@ -28,7 +28,7 @@ public class FixedCameraMovementScript : MonoBehaviour
 	private Transform cameraVerticalPivot;
 
 	// Values used to smoothly transition the camera position/rotation
-	private bool centerCamera;
+	private bool centerCamera =false;
 	private float cameraTransitionTimer;
 	private Quaternion previousHorizontalQuaternion;
 	private Quaternion previousVerticalQuaternion;
@@ -55,22 +55,26 @@ public class FixedCameraMovementScript : MonoBehaviour
 
 	void Start()
 	{
-		// Get the transforms from the Global Data
-		playerTarget = GlobalData.PlayerTargetTransform;
+		
 
-		// Set the camera's transforms. 
-		cameraTransform = GlobalData.PlayerCamera.transform;
-		cameraVerticalPivot = cameraTransform.parent;
-		cameraHorizontalPivot = cameraVerticalPivot.parent;
 
-		// Place the camera in the desired position
-		cameraHorizontalPivot.position = playerTarget.position;
+		
 
 		// Disable this script at the start of the game
 		this.enabled = false;
 
 	}
-	
+	void OnEnable()
+	{
+		// Get the transforms from the Global Data
+		playerTarget = GlobalData.PlayerTargetTransform;
+
+		// Set the camera's transforms. 
+		cameraTransform = Camera.main.transform;
+		cameraVerticalPivot = cameraTransform.parent;
+		cameraHorizontalPivot = cameraVerticalPivot.parent;
+
+	}
 	// Stop any possible transition before shutting down the script
 	void OnDisable()
 	{
@@ -119,6 +123,7 @@ public class FixedCameraMovementScript : MonoBehaviour
 				centerCamera = false;
 			}
 		}
+
 	}
 
 	void FollowPlayer()

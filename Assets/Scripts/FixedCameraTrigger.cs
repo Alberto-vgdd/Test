@@ -34,9 +34,9 @@ public class FixedCameraTrigger : MonoBehaviour
 		{
 			camera3D.enabled = false;
 			
-			camera2D.enabled = true;
-			camera2D.SetUp(targetDistance,targetHeight,targetHoriontalAngle,targetVerticalAngle,cameraFollowSpeedMultiplier,cameraTransitionTime,cameraClippingOffset);
-			camera2D.StartCameraTransition();
+			GlobalData.FixedCameraMovementScript.enabled = true;
+			GlobalData.FixedCameraMovementScript.SetUp(targetDistance,targetHeight,targetHoriontalAngle,targetVerticalAngle,cameraFollowSpeedMultiplier,cameraTransitionTime,cameraClippingOffset);
+			GlobalData.FixedCameraMovementScript.StartCameraTransition();
 		}
 	}
 }
